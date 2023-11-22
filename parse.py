@@ -29,6 +29,9 @@ class Token:
             #pdb.set_trace()
             pass
 
+    def toSMTLIB(self):
+        return self.s
+
 class LevelPart:
     def __init__(self, s, level):
         self.s = s
@@ -141,6 +144,12 @@ class LevelPart:
             pdb.set_trace()
             pass
 
+    def toSMTLIB(self):
+        if self.level > 0:
+            return "("+" ".join([slp.toSMTLIB() for slp in self.slps])+")"
+        else: 
+            return "\n".join([slp.toSMTLIB() for slp in self.slps])
+
 if __name__ == "__main__":
     # Readlines of file
     filename = sys.argv[1]
@@ -201,6 +210,7 @@ if __name__ == "__main__":
 
     # TODO implement the transformations here; but do this last
 
-    # TODO convert back into smtlib based on endpoints' values
-
+    # convert back into smtlib based on endpoints' values
+    smtlib = parseTree.toSMTLIB()
+    
     pdb.set_trace()
