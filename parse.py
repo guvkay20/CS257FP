@@ -137,7 +137,7 @@ class LevelPart:
             #    pass
         elif len(self.slps)==0:
             self.sort = "__nullsort"
-        elif len(self.slps)>0 and isinstance(self.slps[0],Token) and self.slps[0].s in ["declare-fun", "assert"]:
+        elif len(self.slps)>0 and isinstance(self.slps[0],Token) and self.slps[0].s in ["declare-fun", "declare-const","assert"]:
             self.sort = "__nosort"
         elif len(self.slps)>0 and isinstance(self.slps[0],Token) and self.slps[0].s == "let":
             assert(len(self.slps)==3)
@@ -177,6 +177,12 @@ class LevelPart:
             i += 1
         return i
 
+    def setLogic(self, logic):
+        for i,j in enumerate(self.slps):
+            if isinstance(j,LevelPart):
+                if j.slps[0].s == "set-logic":
+                    break
+        self.slps[i].slps[1] = Token(logic)
 
 # INSTANTIATORS
 # BASES
@@ -205,10 +211,12 @@ def ALIGN(term1):
     return a1("Align",term1)#LevelPart("Align ("+term1.s+")",1)
 def OFFSET(term1):
     return a1("Offset",term1)#LevelPart("Offset ("+term1.s+")",1)
+def BASE(term1):
+    return a1("Base",term1)#LevelPart("Offset ("+term1.s+")",1)
 def CREATE(term1,term2):
     return a2("Create",term1,term2)#LevelPart("Create ("+term1.s+") ("+term2.s+")",1)
-def ADDRESS(term1):
-    return a1("Address",term1)#LevelPart("Address ("+term1.s+")",1)
+#def ADDRESS(term1):
+#    return a1("Address",term1)#LevelPart("Address ("+term1.s+")",1)
 def MINP(term1,term2):
     return a2("-p",term1,term2)#LevelPart("-p ("+term1.s+") ("+term2.s+")",1)
 def EQP(term1,term2):
@@ -234,6 +242,8 @@ def QUOT(term1):
 def IFF(term1, term2):
     return AND(IMPL(term1,term2),IMPL(term2,term1))
 #SHORTHANDS
+def ADDRESS(term1):
+    return ADD(BASE(BLOCK(term1)),OFFSET(term1))
 def DB(term1,term2):
     return EQZ(ALIGN(term1),ALIGN(term2))
 def DELTA(term1,term2):
@@ -241,7 +251,13 @@ def DELTA(term1,term2):
 def DELTA0(term1,term2):
     def neq0(t):
         return NOT(EQZ(t,Token("0")))
-    return AND(DELTA(term1,term2),AND(neq0(term1),neq1(term2)))
+    return AND(DELTA(term1,term2),AND(neq0(term1),neq0(term2)))
+def LT(term1,term2):
+    return AND(NOT(EQZ(term1,term2)), LEQ(term1,term2))
+def MIN(term1,term2):
+    return ADD(term1,NEG(term2))
+def RANGE(term1,term2):
+    return AND(LT(Token("0"), ADD(ADDRESS(term1),PROD(Token("s"),term2))),LEQ(ADD(ADDRESS(term1),PROD(Token("s"),term2)),Token("A")))
 #COMMANDS
 def DECLARE_FUN(symbol, in_sorts, out_sort):
     return a3("declare-fun",Token(symbol),LevelPart(" ".join(in_sorts),1),Token(out_sort))
@@ -263,9 +279,10 @@ def Ap(term):
     return EQP(CREATE(BLOCK(term),ADDRESS(term)),term)
 
 def Amod(term):
-    return AND(LEQ(0,ALIGN(term)), LEQ(ALIGN(term),ADD(Token("s"),NEG(Token("1")))))
+    return AND(LEQ(Token("0"),ALIGN(term)), LEQ(ALIGN(term),ADD(Token("s"),NEG(Token("1")))))
 
 def Ain(term):
+    p = term
     return AND(LEQ(Token("0"),ADDRESS(p)),LEQ(ADDRESS(p),Token("A")))
 
 def Ao(term):
@@ -294,16 +311,15 @@ def Adelt(term):
 def Aa(term):
     l = term.slps[1]
     a = term.slps[2]
-    return IMPL(AND(LEQ(token("0"),a),LEQ(a,token("A"))),EQP(ADDRESS(CREATE(l,a)),a)) 
+    return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token("A"))),EQP(ADDRESS(CREATE(l,a)),a)) 
 
 def Ab(term):
     l = term.slps[1]
     a = term.slps[2]
-    return IMPL(AND(LEQ(token("0"),a),LEQ(a,token("A"))),EQP(BLOCK(CREATE(l,a)),l)) 
+    return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token("A"))),EQP(BLOCK(CREATE(l,a)),l)) 
 
-if __name__ == "__main__":
+def convertFile(filename): # is a path
     # Readlines of file
-    filename = sys.argv[1]
     with open(filename) as f:
         lines = list()
         line = f.readline()
@@ -319,7 +335,7 @@ if __name__ == "__main__":
     sorts = set(["Bool","Int","Pointer"])
     parseTree.getSorts(sorts)
 
-    keywords = set(["declare-fun", "assert", "let", "ite", "check-sat", "exit"])
+    keywords = set(["declare-fun", "declare-const","assert", "let", "ite", "check-sat", "exit"])
 
     # Make each expression gather its state
     functions = dict()
@@ -353,7 +369,7 @@ if __name__ == "__main__":
     functions["-p"] = (["Pointer","Pointer"],"Int") # ASSERT
     functions["<=p"] = (["Pointer","Pointer"],"Bool")
     functions["Create"] = (["Int","Int"],"Pointer") #Is (.,.)
-    functions["Address"] = (["Pointer"], "Int") # Is composite, Base(Block(.))+Offset(.)
+    #functions["Address"] = (["Pointer"], "Int") # Is composite, Base(Block(.))+Offset(.) # NOTE commented out as it should not be used by user
     functions["=p"] = (["Pointer","Pointer"],"Bool")  # From Core
     final_fxns = parseTree.setStates(functions, sorts, keywords)
 
@@ -396,7 +412,24 @@ if __name__ == "__main__":
 
     # NOTE that the recon trees are very simplistic and lack features like sorts; the whole pipeline should be reran over the output if sorts etc. are redesired
 
+    # Change Logic BPA -> QF_UFLIA
+    parseTree.setLogic("QF_UFLIA")
+
     # convert back into smtlib based on endpoints' values
     smtlib = parseTree.toSMTLIB()
-    
-    pdb.set_trace()
+
+    return smtlib
+
+def convertFileTo(infile,outfile=None):
+    output = convertFile(infile)
+    if outfile != None:
+        with open(outfile,"w") as f:
+            f.write(output)
+    return output
+
+if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        output = convertFileTo(sys.argv[1],sys.argv[2])
+    else:
+        output = convertFile(sys.argv[1])
+    print(output)
