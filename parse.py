@@ -30,7 +30,17 @@ class Token:
             pass
 
     def toSMTLIB(self):
+        if self.s == "=p": # Due to Core SMTLIB
+            return "="
         return self.s
+
+    def findAllTermsSatisfying(self, lamb):
+        ret = set()
+        if lamb(self):
+            ret.add(self)
+        return ret
+
+
 
 class LevelPart:
     def __init__(self, s, level):
@@ -150,6 +160,147 @@ class LevelPart:
         else: 
             return "\n".join([slp.toSMTLIB() for slp in self.slps])
 
+    def findAllTermsSatisfying(self, lamb):
+        ret = set()
+        if lamb(self):
+            ret.add(self)
+        for slp in self.slps:
+            ret |= slp.findAllTermsSatisfying(lamb)
+        return ret
+
+    def firstDeclare(self):
+        i = 0
+        for j in self.slps:
+            if isinstance(j,LevelPart):
+                if j.slps[0].s in ["declare-fun","declare-const","assert","declare-sort","define-fun","define-const","check-sat"]: #Includes unsupported defines too; assumes if one of these used we're done setting stuff
+                    return i
+            i += 1
+        return i
+
+
+# INSTANTIATORS
+# BASES
+def a1(op,t1):
+    T1 = t1.s if isinstance(t1,Token) else ("("+t1.s+")")
+    return LevelPart(op+" "+T1,1)
+def a2(op,t1,t2):
+    T1 = t1.s if isinstance(t1,Token) else ("("+t1.s+")")
+    T2 = t2.s if isinstance(t2,Token) else ("("+t2.s+")")
+    return LevelPart(op+" "+T1+" "+T2,1)
+def a3(op,t1,t2,t3):
+    T1 = t1.s if isinstance(t1,Token) else ("("+t1.s+")")
+    T2 = t2.s if isinstance(t2,Token) else ("("+t2.s+")")
+    T3 = t3.s if isinstance(t3,Token) else ("("+t3.s+")")
+    return LevelPart(op+" "+T1+" "+T2+" "+T3,1)
+# BASICS
+def AND(term1,term2):
+    return a2("and",term1,term2)#LevelPart("and ("+term1.s+") ("+term2.s+")",1)
+def OR(term1,term2):
+    return a2("or",term1,term2)#LevelPart("or ("+term1.s+") ("+term2.s+")",1)
+def IMPL(term1,term2):
+    return a2("=>",term1,term2)#LevelPart("=> ("+term1.s+") ("+term2.s+")",1)
+def BLOCK(term1):
+    return a1("Block",term1)#LevelPart("Block ("+term1.s+")",1)
+def ALIGN(term1):
+    return a1("Align",term1)#LevelPart("Align ("+term1.s+")",1)
+def OFFSET(term1):
+    return a1("Offset",term1)#LevelPart("Offset ("+term1.s+")",1)
+def CREATE(term1,term2):
+    return a2("Create",term1,term2)#LevelPart("Create ("+term1.s+") ("+term2.s+")",1)
+def ADDRESS(term1):
+    return a1("Address",term1)#LevelPart("Address ("+term1.s+")",1)
+def MINP(term1,term2):
+    return a2("-p",term1,term2)#LevelPart("-p ("+term1.s+") ("+term2.s+")",1)
+def EQP(term1,term2):
+    return a2("=p",term1,term2)#LevelPart("=p ("+term1.s+") ("+term2.s+")",1)
+def EQZ(term1,term2):
+    return a2("=",term1,term2)#LevelPart("= ("+term1.s+") ("+term2.s+")",1)
+def LEQ(term1,term2):
+    return a2("<=",term1,term2)#LevelPart("<= ("+term1.s+") ("+term2.s+")",1)
+def LEQP(term1,term2):
+    return a2("<=p",term1,term2)#LevelPart("<=p ("+term1.s+") ("+term2.s+")",1)
+def ADD(term1,term2):
+    return a2("+",term1,term2)#LevelPart("+ ("+term1.s+") ("+term2.s+")",1)
+def ADDP(term1,term2):
+    return a2("+p",term1,term2)#LevelPart("+p ("+term1.s+") ("+term2.s+")",1)
+def PROD(term1,term2):
+    return a2("*",term1,term2)#LevelPart("* ("+term1.s+") ("+term2.s+")",1)
+def NEG(term1):
+    return a1("-",term1)#LevelPart("- ("+term1.s+")",1)
+def NOT(term1):
+    return a1("NOT",term1)#LevelPart("not ("+term1.s+")",1)
+def QUOT(term1):
+    return a1("quot",term1)#LevelPart("quot ("+term1.s+")",1)
+def IFF(term1, term2):
+    return AND(IMPL(term1,term2),IMPL(term2,term1))
+#SHORTHANDS
+def DB(term1,term2):
+    return EQZ(ALIGN(term1),ALIGN(term2))
+def DELTA(term1,term2):
+    return EQZ(BLOCK(term1),BLOCK(term2))
+def DELTA0(term1,term2):
+    def neq0(t):
+        return NOT(EQZ(t,Token("0")))
+    return AND(DELTA(term1,term2),AND(neq0(term1),neq1(term2)))
+#COMMANDS
+def DECLARE_FUN(symbol, in_sorts, out_sort):
+    return a3("declare-fun",Token(symbol),LevelPart(" ".join(in_sorts),1),Token(out_sort))
+def DECLARE_CONST(symbol,sort):
+    return a2("declare-const",Token(symbol),Token(sort))
+
+# think about uninterpreted quot
+# think about this s,A token constants
+
+def gatherListWithAnds(l):# NOTE this lies about level; should not use level hereafter except 0/1 check
+    if len(l)==0:
+        return Token("true")
+    runner = l[0]
+    for i in range(1, len(l)):
+        runner = AND(runner, l[i])
+    return runner
+
+def Ap(term):
+    return EQP(CREATE(BLOCK(term),ADDRESS(term)),term)
+
+def Amod(term):
+    return AND(LEQ(0,ALIGN(term)), LEQ(ALIGN(term),ADD(Token("s"),NEG(Token("1")))))
+
+def Ain(term):
+    return AND(LEQ(Token("0"),ADDRESS(p)),LEQ(ADDRESS(p),Token("A")))
+
+def Ao(term):
+    return EQZ(OFFSET(term),ADD(PROD(Token("s"),QUOT(term)),ALIGN(term))) 
+
+def Aleq(term):
+    p = term.slps[1]
+    q = term.slps[2]
+    return IMPL(DELTA0(p,q),IFF(LEQP(p,q),LEQ(OFFSET(p),OFFSET(q))))
+
+def Amin(term):
+    p = term.slps[1]
+    q = term.slps[2]
+    return IMPL(AND(DELTA0(p,q),DB(p,q)),EQZ(PROD(Token("s"),MINP(p,q)),MIN(OFFSET(p),OFFSET(q))))
+
+def Aplus(term):
+    p = term.slps[1]
+    i = term.slps[2]
+    return IMPL(AND(NOT(EQZ(ADDRESS(p),Token("0"))),RANGE(p,i)),EQZ(OFFSET(ADDP(p,i)),ADD(OFFSET(p),PROD(Token("s"),i))))
+
+def Adelt(term):
+    p = term.slps[1]
+    i = term.slps[2]
+    return IMPL(AND(NOT(EQZ(ADDRESS(p),Token("0"))),RANGE(p,i)),DELTA(ADDP(p,i),p))
+
+def Aa(term):
+    l = term.slps[1]
+    a = term.slps[2]
+    return IMPL(AND(LEQ(token("0"),a),LEQ(a,token("A"))),EQP(ADDRESS(CREATE(l,a)),a)) 
+
+def Ab(term):
+    l = term.slps[1]
+    a = term.slps[2]
+    return IMPL(AND(LEQ(token("0"),a),LEQ(a,token("A"))),EQP(BLOCK(CREATE(l,a)),l)) 
+
 if __name__ == "__main__":
     # Readlines of file
     filename = sys.argv[1]
@@ -203,12 +354,47 @@ if __name__ == "__main__":
     functions["<=p"] = (["Pointer","Pointer"],"Bool")
     functions["Create"] = (["Int","Int"],"Pointer") #Is (.,.)
     functions["Address"] = (["Pointer"], "Int") # Is composite, Base(Block(.))+Offset(.)
+    functions["=p"] = (["Pointer","Pointer"],"Bool")  # From Core
     final_fxns = parseTree.setStates(functions, sorts, keywords)
 
     # assign each expression a type based on its prestate and its elements' states
     parseTree.assignSorts(sorts, keywords)
 
-    # TODO implement the transformations here; but do this last
+    # The transformation transform formula to formula; should only affect assertions; thus
+    allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert"))
+    for asrt in allAsserts:
+        # find all instances of certain terms in formulas
+        allPointers = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and(t.sort=="Pointer"))
+        allLEQPs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="<=p"))
+        allSUMPs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="+p"))
+        allMINPs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="-p"))
+        allCREATEs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create"))
+       
+        # Instantiate all axioms
+        F = asrt.slps[1]
+        Fp = gatherListWithAnds([Ap(term) for term in allPointers])
+        Fmod = gatherListWithAnds([Amod(term) for term in allPointers])
+        Fin = gatherListWithAnds([Ain(term) for term in allPointers])
+        Fo = gatherListWithAnds([Ao(term) for term in allPointers])
+        Fdelt = gatherListWithAnds([Adelt(term) for term in allSUMPs])
+        Fplus = gatherListWithAnds([Aplus(term) for term in allSUMPs])
+        Fmin = gatherListWithAnds([Amin(term) for term in allMINPs])
+        Fleq = gatherListWithAnds([Aleq(term) for term in allLEQPs])
+        Fa = gatherListWithAnds([Aa(term) for term in allCREATEs])
+        Fb = gatherListWithAnds([Ab(term) for term in allCREATEs])
+
+        # Combine axiom deployments and replace original assertion
+        recon = gatherListWithAnds([F,Fp,Fmod,Fin,Fo,Fdelt,Fplus,Fmin,Fleq,Fa,Fb])
+        asrt.slps[1] = recon
+    # We Must Introduce uninterpreted function quot: Pointer->Int, and the integers s and A
+    index = parseTree.firstDeclare()
+    parseTree.slps = parseTree.slps[:index] + [
+        DECLARE_FUN("quot",["Pointer"],"Int"),
+        DECLARE_CONST("s","Int"),
+        DECLARE_CONST("A","Int")
+        ] + parseTree.slps[index:]
+
+    # NOTE that the recon trees are very simplistic and lack features like sorts; the whole pipeline should be reran over the output if sorts etc. are redesired
 
     # convert back into smtlib based on endpoints' values
     smtlib = parseTree.toSMTLIB()
