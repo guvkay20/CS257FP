@@ -7,6 +7,6 @@
 (declare-const y Pointer)
 (declare-const o Int)
 (assert (= (+p x o) y))
-(assert (<=p (Align x) (Align y)))
+(assert (<= (Align x) (Align y)))
 (check-sat)
 (exit)

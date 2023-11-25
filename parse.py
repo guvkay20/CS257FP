@@ -8,9 +8,15 @@ import copy
 
 # TODO keywords are not nearly complete; but likely sufficient
 
+s = 8
+A = 512
+
+
+
 class Token:
     def __init__ (self, s):
-        self.s = s
+        self.ogs = str(s)
+        self.s = str(s)
     def __repr__(self):
         return self.s
 
@@ -34,16 +40,22 @@ class Token:
             return "="
         return self.s
 
-    def findAllTermsSatisfying(self, lamb):
-        ret = set()
+    def findAllTermsSatisfying(self, lamb,letExplore=True,useList=False):
+        ret = list() if useList else set()
         if lamb(self):
-            ret.add(self)
+            if useList:
+                ret.append(self)
+            else:
+                ret.add(self)
         return ret
 
+    def regenss(self):
+        return self.s
 
 
 class LevelPart:
     def __init__(self, s, level):
+        self.ogs = s
         self.s = s
         self.slps = []
         self.level = level
@@ -160,12 +172,22 @@ class LevelPart:
         else: 
             return "\n".join([slp.toSMTLIB() for slp in self.slps])
 
-    def findAllTermsSatisfying(self, lamb):
-        ret = set()
-        if lamb(self):
-            ret.add(self)
+    def findAllTermsSatisfying(self, lamb, letExplore=True, useList=False):
+        ret = list() if useList else set()
+        if (not letExplore) and len(self.slps)>0 and self.slps[0].s=="let":
+            return ret
         for slp in self.slps:
-            ret |= slp.findAllTermsSatisfying(lamb)
+            #if (not letExplore) and isinstance(slp, LevelPart) and len(slp.slps)>0 and slp.slps[0].s=="let":
+            #    continue
+            if useList:
+                ret += slp.findAllTermsSatisfying(lamb,letExplore=letExplore,useList=True)
+            else:
+                ret |= slp.findAllTermsSatisfying(lamb, letExplore=letExplore)
+        if lamb(self):
+            if useList:
+                ret.append(self)
+            else:
+                ret.add(self)
         return ret
 
     def firstDeclare(self):
@@ -183,6 +205,20 @@ class LevelPart:
                 if j.slps[0].s == "set-logic":
                     break
         self.slps[i].slps[1] = Token(logic)
+
+    def regenss(self):
+        slpss = list()
+        for slp in self.slps:
+            if isinstance(slp, Token):
+                slpss.append(slp.regenss())
+            else:
+                slpss.append("("+slp.regenss()+")")
+
+        if self.level > 0:
+            self.s = " ".join(slpss)
+        else: 
+            self.s = "\n".join(slpss)
+        return self.s
 
 # INSTANTIATORS
 # BASES
@@ -236,7 +272,7 @@ def PROD(term1,term2):
 def NEG(term1):
     return a1("-",term1)#LevelPart("- ("+term1.s+")",1)
 def NOT(term1):
-    return a1("NOT",term1)#LevelPart("not ("+term1.s+")",1)
+    return a1("not",term1)#LevelPart("not ("+term1.s+")",1)
 def QUOT(term1):
     return a1("quot",term1)#LevelPart("quot ("+term1.s+")",1)
 def IFF(term1, term2):
@@ -251,18 +287,21 @@ def DELTA(term1,term2):
 def DELTA0(term1,term2):
     def neq0(t):
         return NOT(EQZ(t,Token("0")))
-    return AND(DELTA(term1,term2),AND(neq0(term1),neq0(term2)))
+    return AND(DELTA(term1,term2),AND(neq0(ADDRESS(term1)),neq0(ADDRESS(term2))))
 def LT(term1,term2):
     return AND(NOT(EQZ(term1,term2)), LEQ(term1,term2))
 def MIN(term1,term2):
     return ADD(term1,NEG(term2))
 def RANGE(term1,term2):
-    return AND(LT(Token("0"), ADD(ADDRESS(term1),PROD(Token("s"),term2))),LEQ(ADD(ADDRESS(term1),PROD(Token("s"),term2)),Token("A")))
+    return AND(LT(Token("0"), ADD(ADDRESS(term1),PROD(Token(s),term2))),LEQ(ADD(ADDRESS(term1),PROD(Token(s),term2)),Token(A)))
 #COMMANDS
 def DECLARE_FUN(symbol, in_sorts, out_sort):
     return a3("declare-fun",Token(symbol),LevelPart(" ".join(in_sorts),1),Token(out_sort))
 def DECLARE_CONST(symbol,sort):
     return a2("declare-const",Token(symbol),Token(sort))
+def DECLARE_SORT(symbol,arity):
+    return a2("declare-sort",Token(symbol),Token(str(arity)))
+
 
 # think about uninterpreted quot
 # think about this s,A token constants
@@ -279,14 +318,14 @@ def Ap(term):
     return EQP(CREATE(BLOCK(term),ADDRESS(term)),term)
 
 def Amod(term):
-    return AND(LEQ(Token("0"),ALIGN(term)), LEQ(ALIGN(term),ADD(Token("s"),NEG(Token("1")))))
+    return AND(LEQ(Token("0"),ALIGN(term)), LEQ(ALIGN(term),ADD(Token(s),NEG(Token("1")))))
 
 def Ain(term):
     p = term
-    return AND(LEQ(Token("0"),ADDRESS(p)),LEQ(ADDRESS(p),Token("A")))
+    return AND(LEQ(Token("0"),ADDRESS(p)),LEQ(ADDRESS(p),Token(A)))
 
 def Ao(term):
-    return EQZ(OFFSET(term),ADD(PROD(Token("s"),QUOT(term)),ALIGN(term))) 
+    return EQZ(OFFSET(term),ADD(PROD(Token(s),QUOT(term)),ALIGN(term))) 
 
 def Aleq(term):
     p = term.slps[1]
@@ -296,12 +335,12 @@ def Aleq(term):
 def Amin(term):
     p = term.slps[1]
     q = term.slps[2]
-    return IMPL(AND(DELTA0(p,q),DB(p,q)),EQZ(PROD(Token("s"),MINP(p,q)),MIN(OFFSET(p),OFFSET(q))))
+    return IMPL(AND(DELTA0(p,q),DB(p,q)),EQZ(PROD(Token(s),MINP(p,q)),MIN(OFFSET(p),OFFSET(q))))
 
 def Aplus(term):
     p = term.slps[1]
     i = term.slps[2]
-    return IMPL(AND(NOT(EQZ(ADDRESS(p),Token("0"))),RANGE(p,i)),EQZ(OFFSET(ADDP(p,i)),ADD(OFFSET(p),PROD(Token("s"),i))))
+    return IMPL(AND(NOT(EQZ(ADDRESS(p),Token("0"))),RANGE(p,i)),EQZ(OFFSET(ADDP(p,i)),ADD(OFFSET(p),PROD(Token(s),i))))
 
 def Adelt(term):
     p = term.slps[1]
@@ -311,14 +350,18 @@ def Adelt(term):
 def Aa(term):
     l = term.slps[1]
     a = term.slps[2]
-    return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token("A"))),EQP(ADDRESS(CREATE(l,a)),a)) 
+    return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token(A))),EQP(ADDRESS(CREATE(l,a)),a)) 
 
 def Ab(term):
     l = term.slps[1]
     a = term.slps[2]
-    return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token("A"))),EQP(BLOCK(CREATE(l,a)),l)) 
+    return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token(A))),EQP(BLOCK(CREATE(l,a)),l)) 
 
-def convertFile(filename): # is a path
+def convertFile(filename,_s,_A): # is a path
+    # Set globals
+    s = _s
+    A = _A
+
     # Readlines of file
     with open(filename) as f:
         lines = list()
@@ -363,7 +406,7 @@ def convertFile(filename): # is a path
     # BPA ones
     functions["Block"] = (["Pointer"], "Int")
     functions["Offset"] = (["Pointer"], "Int")
-    functions["Base"] = (["Pointer"], "Int")
+    functions["Base"] = (["Int"], "Int")
     functions["Align"] = (["Pointer"], "Int")
     functions["+p"] = (["Pointer","Int"],"Pointer") # ASSERT 
     functions["-p"] = (["Pointer","Pointer"],"Int") # ASSERT
@@ -377,17 +420,19 @@ def convertFile(filename): # is a path
     parseTree.assignSorts(sorts, keywords)
 
     # The transformation transform formula to formula; should only affect assertions; thus
-    allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert"))
+    allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert" or t.slps[0].s=="let"),letExplore=True,useList=True)
     for asrt in allAsserts:
+        #pdb.set_trace()
+        asrtt = asrt.slps[1] if asrt.slps[0].s=="assert" else asrt.slps[2]
         # find all instances of certain terms in formulas
-        allPointers = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and(t.sort=="Pointer"))
-        allLEQPs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="<=p"))
-        allSUMPs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="+p"))
-        allMINPs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="-p"))
-        allCREATEs = asrt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create"))
+        allPointers = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and(t.sort=="Pointer"),letExplore=False)
+        allLEQPs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="<=p"),letExplore=False)
+        allSUMPs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="+p"),letExplore=False)
+        allMINPs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="-p"),letExplore=False)
+        allCREATEs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create"),letExplore=False)
        
         # Instantiate all axioms
-        F = asrt.slps[1]
+        F = asrt.slps[1] if asrt.slps[0].s=="assert" else asrt.slps[2]
         Fp = gatherListWithAnds([Ap(term) for term in allPointers])
         Fmod = gatherListWithAnds([Amod(term) for term in allPointers])
         Fin = gatherListWithAnds([Ain(term) for term in allPointers])
@@ -401,16 +446,32 @@ def convertFile(filename): # is a path
 
         # Combine axiom deployments and replace original assertion
         recon = gatherListWithAnds([F,Fp,Fmod,Fin,Fo,Fdelt,Fplus,Fmin,Fleq,Fa,Fb])
-        asrt.slps[1] = recon
+        if (asrt.slps[0].s=="assert"):
+            asrt.slps[1] = recon
+        if (asrt.slps[0].s=="let"):
+            asrt.slps[2] = recon
+
+        parseTree.regenss()
+
     # We Must Introduce uninterpreted function quot: Pointer->Int, and the integers s and A
     index = parseTree.firstDeclare()
     parseTree.slps = parseTree.slps[:index] + [
+        DECLARE_SORT("Pointer",0),
+        DECLARE_FUN("Block",["Pointer"], "Int"),
+        DECLARE_FUN("Offset",["Pointer"], "Int"),
+        DECLARE_FUN("Base",["Int"], "Int"),
+        DECLARE_FUN("Align",["Pointer"], "Int"),
+        DECLARE_FUN("+p",["Pointer","Int"],"Pointer"),
+        DECLARE_FUN("-p",["Pointer","Pointer"],"Int"),
+        DECLARE_FUN("<=p",["Pointer","Pointer"],"Bool"),
+        DECLARE_FUN("Create",["Int","Int"],"Pointer"),
         DECLARE_FUN("quot",["Pointer"],"Int"),
-        DECLARE_CONST("s","Int"),
-        DECLARE_CONST("A","Int")
+        #DECLARE_CONST("s","Int"),
+        #DECLARE_CONST("A","Int")
         ] + parseTree.slps[index:]
 
     # NOTE that the recon trees are very simplistic and lack features like sorts; the whole pipeline should be reran over the output if sorts etc. are redesired
+    
 
     # Change Logic BPA -> QF_UFLIA
     parseTree.setLogic("QF_UFLIA")
@@ -420,16 +481,18 @@ def convertFile(filename): # is a path
 
     return smtlib
 
-def convertFileTo(infile,outfile=None):
-    output = convertFile(infile)
+def convertFileTo(infile,_s,_A,outfile=None):
+    output = convertFile(infile,_s,_A)
     if outfile != None:
         with open(outfile,"w") as f:
             f.write(output)
     return output
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        output = convertFileTo(sys.argv[1],sys.argv[2])
+    if len(sys.argv) == 3:
+        output = convertFileTo(sys.argv[1],8,512,sys.argv[2])
+    elif len(sys.argv) == 5:
+        output = convertFileTo(sys.argv[1],sys.argv[3],sys.argv[4],sys.argv[2])
     else:
-        output = convertFile(sys.argv[1])
+        output = convertFile(sys.argv[1],8,512)
     print(output)
