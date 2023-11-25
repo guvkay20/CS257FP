@@ -422,7 +422,7 @@ def convertFile(filename,_s,_A): # is a path
     # The transformation transform formula to formula; should only affect assertions; thus
     allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert" or t.slps[0].s=="let"),letExplore=True,useList=True)
     for asrt in allAsserts:
-        pdb.set_trace()
+        #pdb.set_trace()
         asrtt = asrt.slps[1] if asrt.slps[0].s=="assert" else asrt.slps[2]
         if asrt.slps[0].s=="let":
             def eq(setter):

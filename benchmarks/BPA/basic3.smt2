@@ -15,5 +15,4 @@
 (assert (not (= b c)))
 (assert (let ((x (Create a b)) (y (Create a c))) (= 0 (-p x y))))
 (check-sat)
-(get-model)
 (exit)
