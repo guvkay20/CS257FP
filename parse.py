@@ -149,7 +149,7 @@ class LevelPart:
             #    pass
         elif len(self.slps)==0:
             self.sort = "__nullsort"
-        elif len(self.slps)>0 and isinstance(self.slps[0],Token) and self.slps[0].s in ["declare-fun", "declare-const","assert"]:
+        elif len(self.slps)>0 and isinstance(self.slps[0],Token) and self.slps[0].s in ["declare-fun", "declare-const","assert","get-assignment","set-option","get-model"]:
             self.sort = "__nosort"
         elif len(self.slps)>0 and isinstance(self.slps[0],Token) and self.slps[0].s == "let":
             assert(len(self.slps)==3)
@@ -378,7 +378,7 @@ def convertFile(filename,_s,_A): # is a path
     sorts = set(["Bool","Int","Pointer"])
     parseTree.getSorts(sorts)
 
-    keywords = set(["declare-fun", "declare-const","assert", "let", "ite", "check-sat", "exit"])
+    keywords = set(["declare-fun", "declare-const","assert", "let", "ite", "check-sat", "get-assignment","exit","set-option","get-model"])
 
     # Make each expression gather its state
     functions = dict()
@@ -422,17 +422,26 @@ def convertFile(filename,_s,_A): # is a path
     # The transformation transform formula to formula; should only affect assertions; thus
     allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert" or t.slps[0].s=="let"),letExplore=True,useList=True)
     for asrt in allAsserts:
-        #pdb.set_trace()
+        pdb.set_trace()
         asrtt = asrt.slps[1] if asrt.slps[0].s=="assert" else asrt.slps[2]
+        if asrt.slps[0].s=="let":
+            def eq(setter):
+                if setter.slps[1].sort == "Pointer":
+                    return EQP(setter.slps[0],setter.slps[1])
+                return EQZ(setter.slps[0],setter.slps[1]) # Sometimes uses the wrong type (= for Pointer) but that should be alright
+            asrtt = gatherListWithAnds([asrtt] + [eq(setter) for setter in asrt.slps[1].slps])
+            asrtt.setStates(asrt.slps[2].prestate, sorts, keywords)
+            asrtt.assignSorts(sorts, keywords)
+            asrtt.regenss()
         # find all instances of certain terms in formulas
         allPointers = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and(t.sort=="Pointer"),letExplore=False)
-        allLEQPs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="<=p"),letExplore=False)
-        allSUMPs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="+p"),letExplore=False)
-        allMINPs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="-p"),letExplore=False)
-        allCREATEs = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create"),letExplore=False)
+        allLEQPs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="<=p")),letExplore=False)
+        allSUMPs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="+p")),letExplore=False)
+        allMINPs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="-p")),letExplore=False)
+        allCREATEs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create")),letExplore=False)
        
         # Instantiate all axioms
-        F = asrt.slps[1] if asrt.slps[0].s=="assert" else asrt.slps[2]
+        F = asrtt
         Fp = gatherListWithAnds([Ap(term) for term in allPointers])
         Fmod = gatherListWithAnds([Amod(term) for term in allPointers])
         Fin = gatherListWithAnds([Ain(term) for term in allPointers])
