@@ -1,0 +1,75 @@
+This benchmark comes from the following example code from the paper:
+
+================
+extern struct builtin_fw __start_builtin_fw[];
+
+extern struct builtin_fw __end_builtin_fw[];
+
+…
+
+for ( b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++ ) {
+
+…
+================
+
+
+Undesireable behavior: the for loop fails to properly stop.
+
+Possible: Yes.
+
+Explanation: Notice that b_fw will always be "tied" to the allocation of the array __start_builtin_fw[], while __end_builtin_fw is the pointer to the beginning of the titular array. The intended behavior is for stopping to occur when the addresses are equal, but the compiler may instead say "these two pointers are related to different memory objects, so they can't possibly be equal" without bothering to check the address.
+
+Root cause: comparison of pointers related to different memory objects is an undefined operation.
+
+Translation into SMT-LIB2: There is a for loop, so we can't unroll this completely, but we can at least assert that, if it should stop after two iterations, then it does. (We expect this to be false.)
+
+We first rewrite the program to ignore the actual contents of the array (pretend they are integers):
+
+=================
+int* start;
+
+int* end;
+
+…
+
+for ( int* iterator = start; iterator != end; iterator++ ) {
+
+…
+=================
+
+We translate as follows:
+start = (Create 0 a)  # create a new pointer with some address a
+1<=a<=512  # the address is a non-NULL memory location.
+
+end = (Create 1 b)  # create a new pointer with some address b
+1<=b<=512  # the address is a non-NULL memory location.
+
+b == a + 2*8  # the address b is what you should expect a to be after two iterations.
+
+start +p 2 == end  # after incrementing the pointer start by 2, it should now be asserted equal to end.
+
+Expected result: unsat.
+
+Explanation: Using everything but the last line, we can deduce that (start +p 2) == (Create 0 b) while end == (Create 1 b), and these are not equal.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

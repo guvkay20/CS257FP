@@ -1,0 +1,18 @@
+We know that, in Benchmark1-2, we can satisfy if base(start) == base(end). However, we now wish to assert that it is possible to not satisfy.
+
+We translate as follows:
+address(start) = a  # create a new pointer with some address a
+1<=a<=512  # the address is a non-NULL memory location.
+
+address(end) = b  # create a new pointer with some address b
+1<=b<=512  # the address is a non-NULL memory location.
+
+base(start) != base(end)  # the pointers start and end are unrelated
+
+b == a + 2*8  # the address b is what you should expect a to be after two iterations.
+
+start +p 2 != end  # after incrementing the pointer start by 2, it should now be asserted equal to end.
+
+Expected result: unsat.
+
+Explanation: The instantiation start = (0, a), end = (1, a+2*8) is an example.

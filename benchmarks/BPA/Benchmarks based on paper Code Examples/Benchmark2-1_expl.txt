@@ -1,0 +1,38 @@
+The next set of benchmarks are based on the following piece of code from the original paper.
+
+====================
+#include <stdio.h>
+
+int main( void ) {
+
+      int a, b;
+
+      int *p = &a;
+
+      int *q = &b - 1;
+
+      printf(“%p %p %d”, p, q, p == q);
+
+      return 0;
+
+}
+===================
+
+The question then is, what does this code output? It turns out that it is possible for the code to output
+======
+0x7ffe32e8ece8 0x7ffe32e8ece8 0
+======
+That is, it is possible for the pointers p and q to have the same address, yet for p == q to evaluate to false. Let us express this:
+
+We assert:
+1<=address(p)<=512
+1<=address(p_to_b)<=512
+
+address(q) == address(p_to_b) +p -1  # q's pointer value is &b - 1
+address(p_to_b) == address(p) +p 1  # b's location in memory is immediately after a's (This ensures address(p) == address(q).)
+
+p != q
+
+Expect: sat
+
+Example solution: p = a, q = a, p_to_b = a+8, base(p) = 0 and base(q) = 1, for some choice of address 1<=a<=511.

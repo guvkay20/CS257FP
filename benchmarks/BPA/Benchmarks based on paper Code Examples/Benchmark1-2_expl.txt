@@ -1,0 +1,16 @@
+We can translate Benchmark1-1 in an alternative manner. Instead of manually asserting that start and end point to different memory addresses, we can instead leave this fact out. Then the formula becomes sat.
+
+We translate as follows:
+address(start) == a  # create a new pointer with some address a
+1<=a<=512  # the address is a non-NULL memory location.
+
+address(end) == b  # create a new pointer with some address b
+1<=b<=512  # the address is a non-NULL memory location.
+
+b == a + 2*8  # the address b is what you should expect a to be after two iterations.
+
+start +p 2 == end  # after incrementing the pointer start by 2, it should now be asserted equal to end.
+
+Expected result: sat.
+
+Explanation: Using everything but the last line, we can deduce that address(start +p 2) == address(end) == b. In fact, this will be satisfied exactly when base(start) == base(end).
