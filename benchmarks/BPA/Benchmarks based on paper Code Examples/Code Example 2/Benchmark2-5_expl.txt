@@ -1,0 +1,14 @@
+Verify address(p) == address(q) in the setup in 2-2. Notice that this in fact _fails_. Why? Because we are taking the differences of pointers that aren't necessarily related.
+
+We assert:
+1<=address(p)<=512
+1<=address(p_to_b)<=512
+
+p_to_b -p p == 1
+p_to_b -p q == 1  # (This ensures address(p) == address(q).)
+
+address(p) != address(q)
+
+Expect: sat
+
+Example solution: p, p_to_b, and q are any pointers at all, where either block(p_to_b) != block(p) or block(p_to_b) != block(q), and where p and q don't have the same address, and where the operations p_to_b - p and p_to_b - q have outcome 1 (which is allowed regardless of the addresses of the relevant pointers whenever the two pointers don't have the same base).

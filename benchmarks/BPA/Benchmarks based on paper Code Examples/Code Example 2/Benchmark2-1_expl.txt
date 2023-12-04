@@ -4,17 +4,11 @@ The next set of benchmarks are based on the following piece of code from the ori
 #include <stdio.h>
 
 int main( void ) {
-
       int a, b;
-
       int *p = &a;
-
       int *q = &b - 1;
-
       printf(“%p %p %d”, p, q, p == q);
-
       return 0;
-
 }
 ===================
 
@@ -28,8 +22,8 @@ We assert:
 1<=address(p)<=512
 1<=address(p_to_b)<=512
 
-address(q) == address(p_to_b) +p -1  # q's pointer value is &b - 1
-address(p_to_b) == address(p) +p 1  # b's location in memory is immediately after a's (This ensures address(p) == address(q).)
+q == p_to_b +p -1  # q = &b - 1
+address(p_to_b) == address(p) + 8  # b's location in memory is immediately after a's (This ensures address(p) == address(q).)
 
 p != q
 

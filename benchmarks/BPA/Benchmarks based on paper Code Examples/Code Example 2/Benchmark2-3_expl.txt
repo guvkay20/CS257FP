@@ -1,0 +1,15 @@
+However, using pointer differences as in Benchmark 2-2 is not actually accurate. Pointer difference is only well-defined when the two pointers are related. Therefore, for the best accuracy, we actually need to specify the difference in the _addresses_. However, we still then need to specify that p_to_b and q are related pointers.
+
+We assert:
+1<=address(p)<=512
+1<=address(p_to_b)<=512
+
+address(p_to_b) - address(p) == 1
+address(p_to_b) - address(q) == 1  # (This ensures address(p) == address(q).)
+block(q) == block(p_to_b)
+
+p != q
+
+Expect: sat
+
+Example solution: p = a, q = a, p_to_b = a+8, base(p) = 0 and base(q) = 1, for some choice of address 1<=a<=511.

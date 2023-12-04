@@ -1,4 +1,4 @@
-We can translate Benchmark1-1 in an alternative manner. Instead of manually asserting that start and end point to different memory addresses, we can instead leave this fact out. Then the formula becomes sat.
+We can translate Benchmark1-1 in an alternative manner. Instead of manually asserting that start and end point to different memory allocations, we can instead leave this fact out. Then the formula becomes sat.
 
 We translate as follows:
 address(start) == a  # create a new pointer with some address a

@@ -1,1 +1,0 @@
-In benchmark 2-1, we explicitly told the solver how the addresses of the different allocations lined up. We could have expressed this differently, by instead simply telling  the computer the difference in addresses:

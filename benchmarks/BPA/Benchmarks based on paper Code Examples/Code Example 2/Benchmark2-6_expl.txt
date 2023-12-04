@@ -1,0 +1,14 @@
+Verify address(p) == address(q) in the setup in 2-3.
+
+
+We assert:
+1<=address(p)<=512
+1<=address(p_to_b)<=512
+
+address(p_to_b) - address(p) == 1
+address(p_to_b) - address(q) == 1  # (This ensures address(p) == address(q).)
+block(q) == block(p_to_b)
+
+address(p) != address(q)
+
+Expect: unsat

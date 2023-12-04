@@ -2,13 +2,9 @@ This benchmark comes from the following example code from the paper:
 
 ================
 extern struct builtin_fw __start_builtin_fw[];
-
 extern struct builtin_fw __end_builtin_fw[];
-
 …
-
 for ( b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++ ) {
-
 …
 ================
 
@@ -27,13 +23,9 @@ We first rewrite the program to ignore the actual contents of the array (pretend
 
 =================
 int* start;
-
 int* end;
-
 …
-
 for ( int* iterator = start; iterator != end; iterator++ ) {
-
 …
 =================
 

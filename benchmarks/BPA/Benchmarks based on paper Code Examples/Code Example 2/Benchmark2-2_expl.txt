@@ -1,0 +1,14 @@
+In benchmark 2-1, we explicitly told the solver how the addresses of the different allocations lined up. We could have expressed this differently, by instead simply telling  the computer the pointer difference between the various pointers:
+
+We assert:
+1<=address(p)<=512
+1<=address(p_to_b)<=512
+
+p_to_b -p p == 1
+p_to_b -p q == 1  # (This ensures address(p) == address(q).)
+
+p != q
+
+Expect: sat
+
+Example solution: p = a, q = a, p_to_b = a+8, base(p) = 0 and base(q) = 1, for some choice of address 1<=a<=511.
