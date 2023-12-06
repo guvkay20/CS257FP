@@ -1,0 +1,33 @@
+We are currently assuming that each pointer points to a 64-bit/8-byte integer, which means that operations like +p and -p use the size s as 8 bytes. We are also assuming that valid memory addresses range from 0 to 512=8*64. That is to say, we can fit up to 64 64-bit integers into memory.
+
+========
+For Benchmark 3-1:
+
+We declare 65 variables, named p0 through p64, of sort Pointer.
+We declare that, for each pair of distinct variables pI, pJ, Address(pI) != Address(pJ).
+We declare that, for each pointer pX, Align(pX) == 0.
+
+We claim this is unsat.
+========
+
+========
+For Benchmark 3-2:
+
+The same as 3-1, except there are only 64 variables.
+
+We claim this is sat.
+========
+
+========
+For Benchmark 3-3:
+
+The same as 3-1, except we relax the constraint that the Alignments must all be 0.
+
+We claim this is sat.
+========
+For Benchmark 3-4:
+
+The same as 3-1, except we relax only the constraint that Align(p0) == 0.
+
+We claim this is sat. We expect any found solution to have Align(p0) != 0.
+========

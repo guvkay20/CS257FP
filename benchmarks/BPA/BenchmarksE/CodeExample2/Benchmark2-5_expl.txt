@@ -5,7 +5,7 @@ We assert:
 1<=address(p_to_b)<=512
 
 p_to_b -p p == 1
-p_to_b -p q == 1  # (This ensures address(p) == address(q).)
+p_to_b -p q == 1  # (This "should" ensure address(p) == address(q).)
 
 address(p) != address(q)
 
