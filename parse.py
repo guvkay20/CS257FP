@@ -359,6 +359,7 @@ def Ab(term):
 
 def convertFile(filename,_s,_A): # is a path
     # Set globals
+    global s, A
     s = _s
     A = _A
 
