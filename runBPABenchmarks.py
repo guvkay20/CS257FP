@@ -4,6 +4,7 @@ from parse import convertFileTo, convertFileToPlus
 import subprocess
 import pdb
 import time
+import json
 
 def getMarksList(marksRootDir="benchmarks/BPA/"):
     marks = list()
@@ -37,7 +38,7 @@ def convertAndRunMarks(marks, converter=convertFileTo):
     avg_time = sum(times)/len(times)
     avg_ttime = sum(ttimes)/len(ttimes)
     avg_tttime = sum(tttimes)/len(tttimes)
-    return ((avg_time,avg_ttime,avg_tttime),(times,ttimes,tttimes))
+    return {"averaged results":(avg_time,avg_ttime,avg_tttime),"raw results":(times,ttimes,tttimes)}
 
 
 if __name__ == "__main__":
@@ -46,4 +47,6 @@ if __name__ == "__main__":
     #BPAmarks = [m.replace("BPA+","BPA") for m in BPAPmarks]
     BPAres = convertAndRunMarks(BPAmarks)
     BPAPres = convertAndRunMarks(BPAPmarks,converter=convertFileToPlus)
+    res = {"unoptimized results":BPAres, "optimized results":BPAPres}
+    json.dump(res,open("results.json","w"),indent=4)
     pdb.set_trace()
