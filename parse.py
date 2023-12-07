@@ -413,6 +413,8 @@ def convertFile(filename,_s,_A): # is a path
     s = _s
     A = _A
 
+
+
     # Readlines of file
     with open(filename) as f:
         lines = list()
@@ -428,6 +430,16 @@ def convertFile(filename,_s,_A): # is a path
     # Gather sorts used
     sorts = set(["Bool","Int","Pointer"])
     parseTree.getSorts(sorts)
+
+    # set A and s, if set-info'd
+    sDecls = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)==3)and t.slps[0].s=="set-info" and t.slps[1].s==":s",letExplore=True)
+    ADecls = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)==3)and t.slps[0].s=="set-info" and t.slps[1].s==":A",letExplore=True)
+    if len(sDecls)==1:
+        s = int(list(sDecls)[0].slps[2].s)
+    if len(ADecls)==1:
+        A = int(list(sDecls)[0].slps[2].s)
+
+
 
     keywords = set(["declare-fun", "declare-const","assert", "let", "ite", "check-sat", "get-assignment","exit","set-option","get-model"])
 
@@ -556,6 +568,14 @@ def convertFilePlus(filename,_s,_A): # is a path
 
     # Generate a basic parse tree over lines
     parseTree = LevelPart(clines, 0)
+
+# set A and s, if set-info'd
+    sDecls = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)==3)and t.slps[0].s=="set-info" and t.slps[1].s==":s",letExplore=True)
+    ADecls = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)==3)and t.slps[0].s=="set-info" and t.slps[1].s==":A",letExplore=True)
+    if len(sDecls)==1:
+        s = int(list(sDecls)[0].slps[2].s)
+    if len(ADecls)==1:
+        A = int(list(sDecls)[0].slps[2].s)
 
     # Gather sorts used
     sorts = set(["Bool","Int","Pointer","Int+"])
