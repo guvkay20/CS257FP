@@ -20,6 +20,7 @@ def convertAndRunMarks(marks, converter=convertFileTo):
     tttimes = list()
 
     for mark in marks:
+        print("Running:",mark)
         tic = time.perf_counter()
         converter(mark,8,512,"tmp.smt2")
         x=subprocess.run(["Z3/z3/build/z3","-smt2","-st","tmp.smt2"], capture_output=True)
