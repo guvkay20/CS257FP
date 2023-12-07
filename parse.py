@@ -294,6 +294,13 @@ def MIN(term1,term2):
     return ADD(term1,NEG(term2))
 def RANGE(term1,term2):
     return AND(LT(Token("0"), ADD(ADDRESS(term1),PROD(Token(s),term2))),LEQ(ADD(ADDRESS(term1),PROD(Token(s),term2)),Token(A)))
+# OPTIM SHORTHANDS
+def DELTAPLUS(term1,term2):
+    return EQZ(term1.slps[1], term2.slps[1])
+def DELTA0PLUS(term1,term2):
+    return DELTAPLUS(term1,term2)
+def RANGEPLUS(term1,term2):
+    return AND(LT(Token("0"), ADD(term1.slps[2],PROD(Token(s),term2))),LEQ(ADD(term1.slps[2],PROD(Token(s),term2)),Token(A)))
 #COMMANDS
 def DECLARE_FUN(symbol, in_sorts, out_sort):
     return a3("declare-fun",Token(symbol),LevelPart(" ".join(in_sorts),1),Token(out_sort))
@@ -301,7 +308,8 @@ def DECLARE_CONST(symbol,sort):
     return a2("declare-const",Token(symbol),Token(sort))
 def DECLARE_SORT(symbol,arity):
     return a2("declare-sort",Token(symbol),Token(str(arity)))
-
+def ASSERT(assertion):
+    return a1("assert",assertion)
 
 # think about uninterpreted quot
 # think about this s,A token constants
@@ -316,6 +324,11 @@ def gatherListWithAnds(l):# NOTE this lies about level; should not use level her
 
 def Ap(term):
     return EQP(CREATE(BLOCK(term),ADDRESS(term)),term)
+def Applus(term):
+    if (isinstance(term,LevelPart)and(len(term.slps)>0)and(term.slps[0].s=="Create+")):
+        return Token("true")
+    return Ap(term)
+
 
 def Amod(term):
     return AND(LEQ(Token("0"),ALIGN(term)), LEQ(ALIGN(term),ADD(Token(s),NEG(Token("1")))))
@@ -323,6 +336,10 @@ def Amod(term):
 def Ain(term):
     p = term
     return AND(LEQ(Token("0"),ADDRESS(p)),LEQ(ADDRESS(p),Token(A)))
+def Ainplus(term):
+    if (isinstance(term,LevelPart)and(len(term.slps)>0)and(term.slps[0].s=="Create+")):
+        return Token("true")
+    return Ain(term)
 
 def Ao(term):
     return EQZ(OFFSET(term),ADD(PROD(Token(s),QUOT(term)),ALIGN(term))) 
@@ -336,16 +353,36 @@ def Amin(term):
     p = term.slps[1]
     q = term.slps[2]
     return IMPL(AND(DELTA0(p,q),DB(p,q)),EQZ(PROD(Token(s),MINP(p,q)),MIN(OFFSET(p),OFFSET(q))))
+def Aminplus(term):
+    p = term.slps[1]
+    q = term.slps[2]
+    if (isinstance(p,LevelPart)and(len(p.slps)>0)and(p.slps[0].s=="Create+")) and (isinstance(q,LevelPart)and(len(q.slps)>0)and(q.slps[0].s=="Create+")):
+        return IMPL(AND(DELTA0PLUS(p,q),DB(p,q)),EQZ(PROD(Token(s),MINP(p,q)),MIN(OFFSET(p),OFFSET(q))))
+    return Amin(term)
+
 
 def Aplus(term):
     p = term.slps[1]
     i = term.slps[2]
     return IMPL(AND(NOT(EQZ(ADDRESS(p),Token("0"))),RANGE(p,i)),EQZ(OFFSET(ADDP(p,i)),ADD(OFFSET(p),PROD(Token(s),i))))
+def Aplusplus(term):
+    p = term.slps[1]
+    i = term.slps[2]
+    if (isinstance(p,LevelPart)and(len(p.slps)>0)and(p.slps[0].s=="Create+")):
+        return IMPL(RANGEPLUS(p,i),EQZ(OFFSET(ADDP(p,i)),ADD(OFFSET(p),PROD(Token(s),i))))
+    return Aplus(term)
+
 
 def Adelt(term):
     p = term.slps[1]
     i = term.slps[2]
     return IMPL(AND(NOT(EQZ(ADDRESS(p),Token("0"))),RANGE(p,i)),DELTA(ADDP(p,i),p))
+def Adeltplus(term):
+    p = term.slps[1]
+    i = term.slps[2]
+    if (isinstance(p,LevelPart)and(len(p.slps)>0)and(p.slps[0].s=="Create+")):
+        return IMPL(RANGEPLUS(p,i),DELTAPLUS(ADDP(p,i),p))
+    return Adelt(term)
 
 def Aa(term):
     l = term.slps[1]
@@ -356,6 +393,19 @@ def Ab(term):
     l = term.slps[1]
     a = term.slps[2]
     return IMPL(AND(LEQ(Token("0"),a),LEQ(a,Token(A))),EQP(BLOCK(CREATE(l,a)),l)) 
+
+
+
+def Aaplus(term):
+    l = term.slps[1]
+    a = term.slps[2]
+    return EQP(ADD(BASE(l),OFFSET(CREATE(l,a))),a) 
+
+def Abplus(term):
+    l = term.slps[1]
+    a = term.slps[2]
+    return EQP(BLOCK(CREATE(l,a)),l) 
+
 
 def convertFile(filename,_s,_A): # is a path
     # Set globals
@@ -480,10 +530,183 @@ def convertFile(filename,_s,_A): # is a path
         #DECLARE_CONST("A","Int")
         ] + parseTree.slps[index:]
 
+    # Change Logic BPA+ -> QF_UFLIA
+    parseTree.setLogic("QF_UFLIA")
+
+    # convert back into smtlib based on endpoints' values
+    smtlib = parseTree.toSMTLIB()
+
+    return smtlib
+
+
+def convertFilePlus(filename,_s,_A): # is a path
+    # Set globals
+    global s, A
+    s = _s
+    A = _A
+
+    # Readlines of file
+    with open(filename) as f:
+        lines = list()
+        line = f.readline()
+        while line:
+            lines.append(line)
+            line = f.readline()
+    clines = " ".join(lines)
+
+    # Generate a basic parse tree over lines
+    parseTree = LevelPart(clines, 0)
+
+    # Gather sorts used
+    sorts = set(["Bool","Int","Pointer","Int+"])
+    parseTree.getSorts(sorts)
+
+    keywords = set(["declare-fun", "declare-const","assert", "let", "ite", "check-sat", "get-assignment","exit","set-option","get-model"])
+
+    # Make each expression gather its state
+    functions = dict()
+    # Bool/Core
+    functions["true"] = ([],"Bool")
+    functions["false"] = ([],"Bool")
+    functions["not"] = (["Bool"], "Bool")
+    functions["=>"] = (["Bool","Bool"],"Bool")
+    functions["and"] = (["Bool","Bool"],"Bool")
+    functions["or"] = (["Bool","Bool"],"Bool") # Convenience extension
+    functions["xor"] = (["Bool","Bool"],"Bool") # Convenience extension
+    # NOTE ite handled as keyword
+    # NOTE = not included parametrically
+    # NOTE distinct not included
+    # QF_UFLIA ones
+    #functions[-] = (["Int"],"Int")   problem: cannot handle two - symbols; add one for subtr; Actually subtr is not necessarily a part of QF_UFLIA
+    functions["+"] = (["Int","Int"],"Int")
+    functions["-"] = (["Int"],"Int") # Is negation
+    functions["*"] = (["Int","Int"],"Int") # It is the user's responsibility to ensure one of these is a constant
+    functions["<="] = (["Int","Int"],"Int")
+    functions["<"] = (["Int","Int"],"Int") # Convenience extension
+    functions[">="] = (["Int","Int"],"Int") # Convenience extension
+    functions[">"] = (["Int","Int"],"Int") # Convenience extension
+    functions["="] = (["Int","Int"],"Int") # Convenience extension
+    # BPA ones
+    functions["Block"] = (["Pointer"], "Int")
+    functions["Offset"] = (["Pointer"], "Int")
+    functions["Base"] = (["Int"], "Int")
+    functions["Align"] = (["Pointer"], "Int")
+    functions["+p"] = (["Pointer","Int"],"Pointer") # ASSERT 
+    functions["-p"] = (["Pointer","Pointer"],"Int") # ASSERT
+    functions["<=p"] = (["Pointer","Pointer"],"Bool")
+    functions["Create"] = (["Int","Int"],"Pointer") #Is (.,.)
+    #functions["Address"] = (["Pointer"], "Int") # Is composite, Base(Block(.))+Offset(.) # NOTE commented out as it should not be used by user
+    functions["=p"] = (["Pointer","Pointer"],"Bool")  # From Core
+    # BPA+ ones
+    functions["Create+"] = (["Int","Int+"],"Pointer")
+    functions["Reduce"] = (["Int+"],"Int")
+    # NOTE do not use Int+ = Int+, no real reason just not implemented
+    final_fxns = parseTree.setStates(functions, sorts, keywords)
+
+    # assign each expression a type based on its prestate and its elements' states
+    parseTree.assignSorts(sorts, keywords)
+
+    # The transformation transform formula to formula; should only affect assertions; thus
+    allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert" or t.slps[0].s=="let"),letExplore=True,useList=True)
+    for asrt in allAsserts:
+        #pdb.set_trace()
+        asrtt = asrt.slps[1] if asrt.slps[0].s=="assert" else asrt.slps[2]
+        if asrt.slps[0].s=="let":
+            def eq(setter):
+                if setter.slps[1].sort == "Pointer":
+                    return EQP(setter.slps[0],setter.slps[1])
+                return EQZ(setter.slps[0],setter.slps[1]) # Sometimes uses the wrong type (= for Pointer) but that should be alright
+            asrtt = gatherListWithAnds([asrtt] + [eq(setter) for setter in asrt.slps[1].slps])
+            asrtt.setStates(asrt.slps[2].prestate, sorts, keywords)
+            asrtt.assignSorts(sorts, keywords)
+            asrtt.regenss()
+        # find all instances of certain terms in formulas
+        allPointers = asrtt.findAllTermsSatisfying(lambda t : ("sort"in dir(t))and(t.sort=="Pointer"),letExplore=False)
+        allLEQPs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="<=p")),letExplore=False)
+        allSUMPs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="+p")),letExplore=False)
+        allMINPs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="-p")),letExplore=False)
+        allCREATEs = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create")),letExplore=False)
+        allCREATEpluss = asrtt.findAllTermsSatisfying(lambda t : (isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create+")),letExplore=False)
+
+       
+        # Instantiate all axioms
+        F = asrtt
+        Fp = gatherListWithAnds([Applus(term) for term in allPointers])
+        Fmod = gatherListWithAnds([Amod(term) for term in allPointers])
+        Fin = gatherListWithAnds([Ainplus(term) for term in allPointers])
+        Fo = gatherListWithAnds([Ao(term) for term in allPointers])
+        Fdelt = gatherListWithAnds([Adeltplus(term) for term in allSUMPs])
+        Fplus = gatherListWithAnds([Aplusplus(term) for term in allSUMPs])
+        Fmin = gatherListWithAnds([Aminplus(term) for term in allMINPs])
+        Fleq = gatherListWithAnds([Aleq(term) for term in allLEQPs])
+        Fa = gatherListWithAnds([Aa(term) for term in allCREATEs])
+        Fb = gatherListWithAnds([Ab(term) for term in allCREATEs])
+        Faplus = gatherListWithAnds([Aaplus(term) for term in allCREATEpluss])
+        Fbplus = gatherListWithAnds([Abplus(term) for term in allCREATEpluss])
+
+        # Combine axiom deployments and replace original assertion
+        recon = gatherListWithAnds([F,Fp,Fmod,Fin,Fo,Fdelt,Fplus,Fmin,Fleq,Fa,Fb,Faplus,Fbplus])
+        if (asrt.slps[0].s=="assert"):
+            asrt.slps[1] = recon
+        if (asrt.slps[0].s=="let"):
+            asrt.slps[2] = recon
+
+        parseTree.regenss()
+
+
     # NOTE that the recon trees are very simplistic and lack features like sorts; the whole pipeline should be reran over the output if sorts etc. are redesired
     
+    # remove all reduce calls
+    allReduces = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Reduce"),letExplore=True,useList=True)
+    for reduc in allReduces:
+        reduc.s = reduc.slps[1].s
+        if isinstance(reduc.slps[1],LevelPart):
+            reduc.slps = reduc.slps[1].slps
+        else:
+            reduc.toSMTLIB= reduc.slps[1].toSMTLIB
+            #self.mark_reduc = True
+    # Make all Create+ calls create calls
+    allCreatePs = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="Create+"),letExplore=True)
+    for createP in allCreatePs:
+        createP.slps[0].s="Create"
 
-    # Change Logic BPA -> QF_UFLIA
+    #add restrictions on all Int+ values, convert them
+    allIntPs = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[-1].s=="Int+"),letExplore=True) #Can only be declare-fun and declare-const as lets can only base values on existing values and Int+ is not the result of any function
+    intprests = {}
+    for intPDecl in allIntPs:
+        #pdb.set_trace()
+        intPDecl.slps[-1].s = "Int"
+        intp = intPDecl.slps[1]
+        intprests[intPDecl] = ASSERT(AND(LEQ(Token(1),intp), LEQ(intp,Token(s))))
+    # Insert the restrictions in order, bear in mind how all are in top level
+    for intPDecl in intprests.keys():
+        for i,slp in enumerate(parseTree.slps):
+            if slp==intPDecl:
+                break
+        parseTree.slps = parseTree.slps[:i+1] +[intprests[intPDecl]]+ parseTree.slps[i+1:]
+
+        
+ 
+    # We Must Introduce uninterpreted function quot: Pointer->Int, and the integers s and A
+    index = parseTree.firstDeclare()
+    parseTree.slps = parseTree.slps[:index] + [
+        DECLARE_SORT("Pointer",0),
+        DECLARE_FUN("Block",["Pointer"], "Int"),
+        DECLARE_FUN("Offset",["Pointer"], "Int"),
+        DECLARE_FUN("Base",["Int"], "Int"),
+        DECLARE_FUN("Align",["Pointer"], "Int"),
+        DECLARE_FUN("+p",["Pointer","Int"],"Pointer"),
+        DECLARE_FUN("-p",["Pointer","Pointer"],"Int"),
+        DECLARE_FUN("<=p",["Pointer","Pointer"],"Bool"),
+        DECLARE_FUN("Create",["Int","Int"],"Pointer"),
+        DECLARE_FUN("quot",["Pointer"],"Int"),
+        #DECLARE_CONST("s","Int"),
+        #DECLARE_CONST("A","Int")
+        ]  +parseTree.slps[index:]
+
+   
+        
+    # Change Logic BPA+ -> QF_UFLIA
     parseTree.setLogic("QF_UFLIA")
 
     # convert back into smtlib based on endpoints' values
@@ -498,11 +721,24 @@ def convertFileTo(infile,_s,_A,outfile=None):
             f.write(output)
     return output
 
+def convertFileToPlus(infile,_s,_A,outfile=None):
+    output = convertFilePlus(infile,_s,_A)
+    if outfile != None:
+        with open(outfile,"w") as f:
+            f.write(output)
+    return output
+
 if __name__ == "__main__":
+    print(sys.argv)
     if len(sys.argv) == 3:
         output = convertFileTo(sys.argv[1],8,512,sys.argv[2])
     elif len(sys.argv) == 5:
         output = convertFileTo(sys.argv[1],sys.argv[3],sys.argv[4],sys.argv[2])
-    else:
+    elif len(sys.argv) == 2:
         output = convertFile(sys.argv[1],8,512)
+    elif len(sys.argv) == 4:
+        output = convertFileToPlus(sys.argv[1],8,512,sys.argv[2])
+    elif len(sys.argv) == 6:
+        output = convertFileToPlus(sys.argv[1],sys.argv[3],sys.argv[4],sys.argv[2])
+
     print(output)
