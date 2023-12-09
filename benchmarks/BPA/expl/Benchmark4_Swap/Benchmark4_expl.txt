@@ -1,0 +1,65 @@
+An extremely common pointer operation is dereferencing. Dereferencing (for int pointers) is a function that takes a pointer and returns an int. The primary axiom of dereferencing is:
+
+for all p1, p2: if address(p1) == address(p2), then deref(p1) == deref(p2).
+
+In other words, if p1 and p2 have the same address, then the result of dereferencing has to be the same. Put another way, you can't store two different things at the same address.
+
+(We won't end up using this.)
+
+This doesn't capture everything about dereferencing (e.g. dereferencing isn't defined for a NULL pointer, and if the addresses of p1 and p2 are very close together, their targets will overlap), but this is sufficient to test a basic swap implementation.
+
+======
+// Create two pointers
+main() {
+	int* p1;
+	*p1 = a;
+	int* p2;
+	*p2 = b;
+	assert (a != b);
+	
+	swap(p1, p2);
+
+	assert(*p1 == b);
+	assert(*p2 == a);
+}
+// Swap the contents pointed to by addresses p1 and p2, assuming the contents do not overlap.
+void swap(int* p1, int* p2) {
+	int* temp;
+	*temp = *p1;
+	*p1 = *p2;
+	*p2 = *temp;
+}
+======
+
+Note here how the pointers themselves don't change. Instead what changes is the value of deref(p), as the memory contents change. As a result, we declare deref to take two arguments: A timestamp and a pointer.
+
+We declare:
+pointers p1, p2, temp
+
+(declare-fun Deref (Int Pointer) Int)
+
+We assert:
+
+# At time 0, *p1 == a and *p2 == b.
+deref(0 p1) == a
+deref(0 p2) == b
+
+a != b
+
+# At time 0, *temp = *p1
+deref(0, temp) == deref(0, p1)
+
+# At time 1, we modify *p1, without modifying the other pointers.
+deref(1, p1) == deref(0, p2)
+deref(1, p2) == deref(0, p2)
+deref(1, temp) == deref(0, temp)
+
+# At time 2, we modify *p2, without modifying the other pointers.
+deref(2, p2) == deref(1, temp)
+deref(2, p1) == deref(1, p1)
+deref(2, temp) == deref(1, temp)
+
+# This should have swapped the values of *p1 and *p2. We assert this is _not_ the case in an attempt to get unsat.
+
+NOT (deref(2, p1) == deref(0, p2) AND deref(2, p2) == deref(0, p1))
+
