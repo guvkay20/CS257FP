@@ -1,0 +1,19 @@
+Now we wish to directly test whether the pointer axioms were correctly instantiated.
+
+==============
+
+Benchmark 5-1:
+
+Axiom A_in states that for all pointers, their address value lies between 0 and A. This axiom is instantiated for all subexpressions of sort Pointer.
+
+We declare a pointer, then attempt to claim it's address is out-of-range. This should be unsat.
+
+Declare pointer pt.
+Declare int addr
+
+We Assert:
+addr = base(block(pt)) + offset(pt)
+
+addr < 0 OR addr > 512
+
+==============
