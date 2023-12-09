@@ -1,4 +1,15 @@
-We are currently assuming that each pointer points to a 64-bit/8-byte integer, which means that operations like +p and -p use the size s as 8 bytes. We are also assuming that valid memory addresses range from 0 to 512=8*64. That is to say, we can fit up to 64 64-bit integers into memory.
+We are currently assuming that each pointer points to a 64-bit/8-byte integer, which means that operations like +p and -p use the size s as 8 bytes. We are also assuming that valid memory addresses range from 0 to 512=8*64. That is to say, we can fit up to 64 64-bit integers into memory (with one byte left over).
+
+========
+For Benchmark 3-1a:
+
+Three distinct non-null int pointers that point to nonoverlapping ints cannot fit in a memory space ranging from 0 to 23.
+
+We declare three variables p0, p1, p2, of sort Pointer.
+
+
+
+
 
 ========
 For Benchmark 3-1:
