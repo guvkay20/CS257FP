@@ -13,6 +13,22 @@ Address(p1) - Address(p0) >= 8.
 Address(p2) - Address(p1) >= 8.
 Address(p2) + 7 <= 23.
 
+We expect this to be unsat.
+
+========
+
+For Benchmark 3-1b:
+
+The same setup minus the assertion Address(p2) + 7 <= 23. Should be sat.
+
+========
+
+
+
+
+
+
+
 
 
 ========

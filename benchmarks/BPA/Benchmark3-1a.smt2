@@ -15,5 +15,4 @@
 (assert (<= (- (+ (Base (Block p1)) (Offset p1)) (+ (Base (Block p2)) (Offset p2))) -8))
 (assert (<= (+ (+ (Base (Block p2)) (Offset p2)) 7) 23))
 (check-sat)
-(get-model)
 (exit)
