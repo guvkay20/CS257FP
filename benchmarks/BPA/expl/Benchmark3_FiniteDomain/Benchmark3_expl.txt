@@ -41,38 +41,4 @@ For Benchmark 3-2b:
 
 We only have 64 pointers (get rid of p0 and anything involving it). This should be sat. Moreover, p1 should have address 0 or 1.
 
-
-
-
-
-========
-For Benchmark 3-1:
-
-We declare 65 variables, named p0 through p64, of sort Pointer.
-We declare that, for each pair of distinct variables pI, pJ, Address(pI) != Address(pJ).
-We declare that, for each pointer pX, Align(pX) == 0.
-
-We claim this is unsat.
-========
-
-========
-For Benchmark 3-2:
-
-The same as 3-1, except there are only 64 variables.
-
-We claim this is sat.
-========
-
-========
-For Benchmark 3-3:
-
-The same as 3-1, except we relax the constraint that the Alignments must all be 0.
-
-We claim this is sat.
-========
-For Benchmark 3-4:
-
-The same as 3-1, except we relax only the constraint that Align(p0) == 0.
-
-We claim this is sat. We expect any found solution to have Align(p0) != 0.
-========
+=========
