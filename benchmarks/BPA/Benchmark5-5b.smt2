@@ -10,6 +10,6 @@
 (declare-const a_sum Int)
 (assert (= a (+ (Base (Block pt)) (Offset pt))))
 (assert (= a_sum (+ (Base (Block (+p pt c))) (Offset (+p pt c)))))
-(assert (or (< (Align (+p pt c)) 0) (> (Align +p pt c) 7)))
+(assert (or (< (Align (+p pt c)) 0) (> (Align (+p pt c)) 7)))
 (check-sat)
 (exit)
