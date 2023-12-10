@@ -23,9 +23,21 @@ The same setup minus the assertion Address(p2) + 7 <= 23. Should be sat.
 
 ========
 
+For Benchmark 3-2a:
 
+We declare 64 variables, named p0 through p63, of sort Pointer.
+We declare none of them are NULL pointers.
+We declare that, for each 0 <= i <= 62: Address(p(i+1)) - Address(pi) >= 8.
+We declare a pointer end
+We declare that Address(p64) + 7 == Address(end).
 
+We claim this is unsat.
 
+=========
+
+For Benchmark 3-2b:
+
+We only have 64 pointers (get rid of p0 and anything involving it). This should be sat. Moreover, p1 should have address 0 or 1.
 
 
 
