@@ -18,7 +18,7 @@ Benchmark 5-1:
 
 Axiom A_in states that for all pointers, their address value lies between 0 and A. This axiom is instantiated for all subexpressions of sort Pointer.
 
-We declare a pointer, then attempt to claim it's address is out-of-range. This should be unsat.
+We declare a pointer, then attempt to claim its address is out-of-range. This should be unsat.
 
 Declare pointer pt.
 Declare int addr
@@ -37,8 +37,8 @@ Axiom A_<= states that pointer comparison between two pointers p and q is define
 -block(p) == block(q)
 
 We therefore wish to test that:
-(a) if the conditions are met, then we can't get a false result
-(b) if any of the conditions are _not_ met, then we _can_ get a false result.
+1. if the conditions are met, then we can't get a false result
+2. if any of the conditions are _not_ met, then we _can_ get a false result.
 
 Declare pointers p and q.
 For convenience, declare ints ap and aq.
@@ -47,7 +47,8 @@ We assert:
 ap = base(block(p)) + offset(p)
 aq = base(block(q)) + offset(q)
 
-To test (a), we further assert:
+(a):
+To test 1., we further assert:
 ap != 0
 aq != 0
 block(p) == block(q)
@@ -56,9 +57,14 @@ NOT (p <=p q)
 
 This should be unsat.
 
-To test (b), we try combinations of all of the above with one of the premises (i.e. everything except the last assertion) negated. All of these should be sat.
+To test 2., we try combinations of all of the above with one of the premises (i.e. everything except the last assertion) negated.
 
-There is one more combination to test: If we negate ap <= aq, AND negate NOT(p <=p q), then we should still get unsat.
+(b): ap == 0 (should be sat)
+(c): aq == 0 (should be unsat; notice that aq == 0 with ap <= aq forces ap <= 0)
+(d): block(p) != block(q) (should be sat)
+(e): ap !<= aq (should be sat)
+
+(f): There is one more combination to test: If we negate ap <= aq, AND negate NOT(p <=p q), then we should still get unsat.
 
 ==============
 
@@ -74,7 +80,7 @@ For convenience, declare Int b
 For convenience, assert b = Block(p).
 
 Here are a few statements:
-(1) a == b + offset(p).
+(1) a == (Base b) + offset(p).
 (2) 0 <= a <= 512.
 
 (3) (Create b a) == p.

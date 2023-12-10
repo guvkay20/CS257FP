@@ -8,7 +8,7 @@
 (declare-const a Int)
 (declare-const b Int)
 (assert (= b (Block p)))
-(assert (= a (+ b (Offset p))))
+(assert (= a (+ (Base b) (Offset p))))
 (assert (not (<= 0 a 512)))
 (check-sat)
 (exit)

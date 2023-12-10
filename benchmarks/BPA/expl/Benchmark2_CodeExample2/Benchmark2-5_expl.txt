@@ -1,8 +1,8 @@
 Verify address(p) == address(q) in the setup in 2-2. Notice that this in fact _fails_. Why? Because we are taking the differences of pointers that aren't necessarily related.
 
 We assert:
-1<=address(p)<=512
-1<=address(p_to_b)<=512
+address(p) != 0
+address(p_to_b) != 0
 
 p_to_b -p p == 1
 p_to_b -p q == 1  # (This "should" ensure address(p) == address(q).)

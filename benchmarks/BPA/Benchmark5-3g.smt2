@@ -8,7 +8,7 @@
 (declare-const a Int)
 (declare-const b Int)
 (assert (= b (Block p)))
-(assert (not (= a (+ b (Offset p)))))
+(assert (not (= a (+ (Base b) (Offset p)))))
 (assert (= (+ (Base (Block (Create b a))) (Offset (Create b a))) a))
 (check-sat)
 (get-model)

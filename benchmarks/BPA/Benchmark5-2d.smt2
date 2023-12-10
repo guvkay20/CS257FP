@@ -16,5 +16,4 @@
 (assert (<= ap aq))
 (assert (not (<=p p q)))
 (check-sat)
-(get-model)
 (exit)

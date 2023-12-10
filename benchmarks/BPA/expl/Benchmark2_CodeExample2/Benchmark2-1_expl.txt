@@ -19,8 +19,8 @@ The question then is, what does this code output? It turns out that it is possib
 That is, it is possible for the pointers p and q to have the same address, yet for p == q to evaluate to false. Let us express this:
 
 We assert:
-1<=address(p)<=512
-1<=address(p_to_b)<=512
+address(p) != 0
+address(p_to_b) != 0
 
 q == p_to_b +p -1  # q = &b - 1
 address(p_to_b) == address(p) + 8  # b's location in memory is immediately after a's (This ensures address(p) == address(q).)

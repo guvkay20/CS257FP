@@ -2,10 +2,10 @@ We know that, in Benchmark1-2, we can satisfy if base(start) == base(end). Howev
 
 We translate as follows:
 address(start) = a  # create a new pointer with some address a
-1<=a<=512  # the address is a non-NULL memory location.
+a != 0  # the address is a non-NULL memory location.
 
 address(end) = b  # create a new pointer with some address b
-1<=b<=512  # the address is a non-NULL memory location.
+b != 0  # the address is a non-NULL memory location.
 
 b == a + 2*8  # the address b is what you should expect a to be after two iterations.
 
