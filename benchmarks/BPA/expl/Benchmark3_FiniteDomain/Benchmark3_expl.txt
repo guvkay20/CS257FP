@@ -15,6 +15,8 @@ Address(p2) + 7 <= 23.
 
 We expect this to be unsat.
 
+Note: Because we decided to have the default maximum address be 512, this is actually satisfiable. We had to add one more constaint that p0's address is at least 2 to mimic the desired effect.
+
 ========
 
 For Benchmark 3-1b:
