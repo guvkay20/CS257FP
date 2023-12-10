@@ -90,7 +90,7 @@ Here are a few statements:
 We can combine these in different combinations. We expect the following statements to be true:
 (a): 1 implies 2.
 (b): 1 implies 3.
-(c): We can have ~1, 2 and 3 (Create is never under any direct obligation to _not_ equal anything.)
+(c): (2 and 3) -> 1 ((Create b a), provided a is a valid address, must have block b and address a, and so it is functionally equal to any other pointer with this block and address.)
 
 (d): 2 implies (4 and 5). (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
 (e): We can have ~2 and 4.
