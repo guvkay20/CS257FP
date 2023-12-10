@@ -148,6 +148,9 @@ First Assert a = 200, c = 20 (so offset adjustment is 20*8=160, making address(s
 Then Assert sum -p pt != 20.
 (Should be unsat.)
 
+Now, we explicitly choose values to force A_Delta and A_+ not to apply, then check that it is possible to get bad results.
+
+
 
 
 
