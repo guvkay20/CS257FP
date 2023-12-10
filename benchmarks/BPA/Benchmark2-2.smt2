@@ -13,5 +13,4 @@
 (assert (= (-p p_to_b q) 1))
 (assert (not (=p p q)))
 (check-sat)
-(get-model)
 (exit)

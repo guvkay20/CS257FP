@@ -15,5 +15,4 @@
 (assert (= b (+ a (* 2 8))))
 (assert (= (+p start 2) end))
 (check-sat)
-(get-model)
 (exit)

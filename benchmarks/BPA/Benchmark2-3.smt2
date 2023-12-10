@@ -14,5 +14,4 @@
 (assert (= (Block q) (Block p_to_b)))
 (assert (not (=p p q)))
 (check-sat)
-(get-model)
 (exit)

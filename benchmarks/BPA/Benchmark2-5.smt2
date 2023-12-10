@@ -13,5 +13,4 @@
 (assert (= (-p p_to_b q) 1))
 (assert (not (= (+ (Base (Block p)) (Offset p)) (+ (Base (Block q)) (Offset q)))))
 (check-sat)
-(get-model)
 (exit)
