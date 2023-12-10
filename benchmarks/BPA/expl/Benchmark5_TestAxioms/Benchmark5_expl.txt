@@ -46,6 +46,8 @@ This should be unsat.
 
 To test (b), we try combinations of all of the above with one of the premises (i.e. everything except the last assertion) negated. All of these should be sat.
 
+There is one more combination to test: If we negate ap <= aq, AND negate NOT(p <=p q), then we should in fact get unsat.
+
 ==============
 
 
