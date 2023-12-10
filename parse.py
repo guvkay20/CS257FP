@@ -23,6 +23,8 @@ class Token:
     def assignSorts(self, sorts, keywords, prestate):
         if self.s in prestate.keys():
             self.sort = prestate[self.s]
+            if self.sort[0] == []:
+                self.sort = self.sort[1]
             #assert(self.soft in sorts)  Can assert all parts of self.sort is in sorts; but no reason to
         elif self.s in keywords:
             self.sort = "__keyword"
@@ -481,6 +483,7 @@ def convertFile(filename,_s,_A): # is a path
 
     # assign each expression a type based on its prestate and its elements' states
     parseTree.assignSorts(sorts, keywords)
+    #pdb.set_trace()
 
     # The transformation transform formula to formula; should only affect assertions; thus
     allAsserts = parseTree.findAllTermsSatisfying(lambda t: isinstance(t,LevelPart)and(len(t.slps)>0)and(t.slps[0].s=="assert" or t.slps[0].s=="let"),letExplore=True,useList=True)
