@@ -3,7 +3,7 @@ Now we wish to directly test whether the pointer axioms were correctly instantia
 Axioms:
 A_<=	Completed 5-2
 A_p:	Completed 5-3
-A_%:	Completed 5-4
+A_%:	Completed 5-4 (but could use expansion)
 A_in:	Completed 5-1 (but could use expansion)
 A_-:
 A_o:
@@ -102,11 +102,51 @@ We declare a pointer, then attempt to claim it's alignment is out-of-range. This
 Declare pointer pt.
 
 We Assert:
-addr < align(pt) OR align(pt) > 512
+align(pt) < 0 OR align(pt) > 7
 
+==============
 
+Benchmark 5-5:
 
+Axiom A_Delta states that valid pointer addition (pointer + int) preserves the associated memory. Axiom A_+ states that, in the same situation, the offset is adjusted by the amount s * number added.
 
+As a baseline, we start with:
+(declare-const pt Pointer)
+(declare-const c Int)
+# For convenience:
+(declare-const a Int)
+(assert (= a (+ (Base (Block pt)) (Offset pt))))
+(declare-const a_sum Int)
+(assert (= a_sum (+ (Base (Block (+p pt c))) (Offset (+p pt c)))))
+
+First, we test that the parser properly recognizes pt +p c as a pointer-type expression for A_p and A_%:
+
+(a): Assert a_sum < 0 OR a_sum > 512 (should be unsat)
+
+(b): Assert align(pt +p c) < 0 OR align(pt +p c) > 7 (should be unsat)
+
+Now we add the following:
+
+(declare-const sum Pointer)
+# Assert sum =p pt +p c.
+(assert (=p sum (+p pt c)))
+
+First, we explicitly choose values to force A_Delta and A_+ to apply, then check that we got the expected results.
+
+(c):
+First Assert a = 200, c = 20 (so offset adjustment is 20*8=160, making address(sum) == 360).
+Then Assert Block(pt) != Block(sum).
+(Should be unsat.)
+
+(d): 
+First Assert a = 200, c = 20 (so offset adjustment is 20*8=160, making address(sum) == 360).
+Then Assert Offset(sum) - Offset(pt) != 160.
+(Should be unsat.)
+
+(e): While we're at it, we can add an extra check that pointer subtraction works properly.
+First Assert a = 200, c = 20 (so offset adjustment is 20*8=160, making address(sum) == 360).
+Then Assert sum -p pt != 20.
+(Should be unsat.)
 
 
 
