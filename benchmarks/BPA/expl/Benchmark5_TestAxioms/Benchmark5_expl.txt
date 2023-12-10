@@ -50,6 +50,45 @@ There is one more combination to test: If we negate ap <= aq, AND negate NOT(p <
 
 ==============
 
+Benchmark 5-3:
+
+A_p states that a pointer with the same block and address as p must equal p. A_a states that the address of a created pointer is the address it was created with, provided that the address was valid. A_b states that the block of a created poitner is the block it was created with, provided that the address was valid.
+
+We therefore wish to test these three axioms directly for an instantiated p.
+
+Declare pointer p.
+For convenience, declare Int a
+For convenience, declare Int b
+For convenience, assert b = Block(p).
+
+Here are a few statements:
+(1) a == b + offset(p).
+(2) 0 <= a <= 512.
+
+(3) (Create b a) == p.
+(4) block(Create b a) == b.
+(5) address(Create b a) == a
+
+We can combine these in different combinations. We expect the following statements to be true:
+(a): 1 implies 2.
+(b): 1 implies 3.
+(c): We can have ~1, 2 and 3 (Create is never under any direct obligation to _not_ equal anything.)
+
+(d): 2 implies (4 and 5). (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
+(e): We can have ~2, 4, and 5. (Again, the only way to force Create to not equal/not have the properties of thing 1 is to force it to equal the distinct thing 2.)
+
+==============
+
+
+
+
+
+
+
+
+
+
+
 
 
 
