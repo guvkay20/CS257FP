@@ -15,7 +15,7 @@ Declare a series of pointer variables i0, i1,... i100. (We are unrolling the loo
 
 Declare that i0 =p arr.
 
-Declare that, for 0 <= j <= 99, i(j+1) =p ij +p 8.
+Declare that, for 0 <= j <= 99, i(j+1) =p ij +p 1.
 
 6-1:
 Assert NOT(for each 0 <= j <= 59, that ij <= (arr +p 59)).

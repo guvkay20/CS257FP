@@ -1,0 +1,43 @@
+
+Suppose we have a small array in memory, and we want to iterate over it, but instead of using indices, we choose instead to use pointers to elements:
+
+int arr[3];
+
+for (int* i_ptr = arr; i_ptr <= &(arr[2]); i_ptr++) {
+	do_something;
+}
+
+We wish to assert that the loop always stops exactly when we expect it to.
+
+Declare a pointer variable arr.
+
+Declare a series of pointer variables i0, i1, i2, i3. (We are unrolling the loop for 4 steps.)
+
+Declare that i0 =p arr.
+
+Declare that, for 0 <= j <= 2, i(j+1) =p ij +p 1.
+
+6-1a:
+Assert NOT(for each 0 <= j <= 2, that ij <=p (arr +p 2)).
+This should be sat, and will correspond to a situation where address(arr) is large, making the result of large pointer addition undefined (and subsequently allowing comparison to be whatever it wants to be). This corresponds to stopping the loop early.
+
+6-1b:
+Assert for each 0 <= j <= 2, that ij <=p (arr +p 2).
+Assert, that i3 <=p (arr +p 2).
+(This should be sat, and will again correspond to a situation where address(arr) is too large.) This corresponds to not stopping the loop where expected.
+
+6-1c and 6-1d:
+Now we will repeat the prior two tests after adding the assertion that the entire array fits in memory. That is, tests 6-1c and 6-1d are 6-1a and 6-1b, respectively, both with the additional assertion address(arr) + 8*3 - 1 <= 512. 1c and 1d should be unsat.
+
+
+
+(perhaps add a version with infinite looping?)
+
+
+
+
+
+
+
+
+
