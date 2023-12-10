@@ -1,5 +1,17 @@
 Now we wish to directly test whether the pointer axioms were correctly instantiated.
 
+Axioms:
+A_<=	Completed 5-2
+A_p:	Completed 5-3
+A_%:	Completed 5-4
+A_in:	Completed 5-1 (but could use expansion)
+A_-:
+A_o:
+A_Delta:
+A_+:
+A_a:	Completed 5-3
+A_b:	Completed 5-3
+
 ==============
 
 Benchmark 5-1:
@@ -81,9 +93,16 @@ We can combine these in different combinations. We expect the following statemen
 
 ==============
 
+Benchmark 5-4:
 
+Axiom A_% states that the alignment of any pointer must be a value between 0 and s-1. Testing this is similar to testing that addresses must lie in memory from 5-1.
 
+We declare a pointer, then attempt to claim it's alignment is out-of-range. This should be unsat.
 
+Declare pointer pt.
+
+We Assert:
+addr < align(pt) OR align(pt) > 512
 
 
 
