@@ -75,7 +75,9 @@ We can combine these in different combinations. We expect the following statemen
 (c): We can have ~1, 2 and 3 (Create is never under any direct obligation to _not_ equal anything.)
 
 (d): 2 implies (4 and 5). (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
-(e): We can have ~2, 4, and 5. (Again, the only way to force Create to not equal/not have the properties of thing 1 is to force it to equal the distinct thing 2.)
+(e): We can have ~2 and 4.
+(f): We cannot have ~2 and 5.
+(g): We _can_ have ~1 and 5.
 
 ==============
 
