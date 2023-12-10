@@ -9,6 +9,6 @@
 (declare-const b Int)
 (assert (= b (Block p)))
 (assert (<= 0 a 512))
-(assert (and (= (Block (Create b a)) b) (= (Address (Create b a)) a)))
+(assert (not (and (= (Block (Create b a)) b) (= (+ (Base (Block (Create b a))) (Offset (Create b a))) a))))
 (check-sat)
 (exit)

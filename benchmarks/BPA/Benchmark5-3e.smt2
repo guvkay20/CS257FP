@@ -10,7 +10,7 @@
 (assert (= b (Block p)))
 (assert (not (<= 0 a 512)))
 (assert (= (Block (Create b a)) b))
-(assert (= (Address (Create b a)) a))
+(assert (= (+ (Base (Block (Create b a))) (Offset (Create b a))) a))
 (check-sat)
 (get-model)
 (exit)
