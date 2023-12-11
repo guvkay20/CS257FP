@@ -114,7 +114,7 @@ align(pt) < 0 OR align(pt) > 7
 
 Benchmark 5-5:
 
-Axiom A_Delta states that valid pointer addition (pointer + int) preserves the associated memory. Axiom A_+ states that, in the same situation, the offset is adjusted by the amount s * number added.
+Axiom A_Delta states that valid pointer addition (pointer + int) preserves the associated memory allocation. Axiom A_+ states that, in the same situation, the offset is adjusted by the amount s * number added.
 
 As a baseline, we start with:
 (declare-const pt Pointer)
@@ -156,7 +156,54 @@ Then Assert sum -p pt != 20.
 
 Now, we explicitly choose values to force A_Delta and A_+ not to apply, then check that it is possible to get bad results.
 
+(f):
+First Assert a = 400, c = 20 (so the offset adjustment is 20*8=160, making the "address" of sum out to be 560, which is out of range).
+Then Assert Block(pt) != Block(sum).
+(Should be sat.)
 
+(g):
+First Assert a = 400, c = 20 (so the offset adjustment is 20*8=160, making the "address" of sum out to be 560, which is out of range).
+Then Assert Offset(sum) - Offset(pt) != 160.
+(Should be sat.)
+
+(h): An additional check for pointer subtraction:
+First Assert a = 400, c = 20 (so the offset adjustment is 20*8=160, making the "address" of sum out to be 560, which is out of range).
+Then Assert sum -p pt != 20.
+(Should be sat.)
+
+Here, we made it so that the address ran too high. But what if instead the address runs too low? For example, what if "addition" were to result in a null pointer?
+
+(i):
+First Assert a = 160, c = -20 (so the offset adjustment is -20*8=-160, making the "address" of sum out to be 0, which is null).
+Then Assert Block(pt) != Block(sum).
+(Should be sat.)
+
+(j):
+First Assert a = 160, c = -20 (so the offset adjustment is -20*8=-160, making the "address" of sum out to be 0, which is null).
+Then Assert Offset(sum) - Offset(pt) != -160.
+(Should be sat.)
+
+(k): An additional check for pointer subtraction:
+First Assert a = 160, c = -20 (so the offset adjustment is -20*8=-160, making the "address" of sum out to be 0, which is null).
+Then Assert sum -p pt != -20.
+(Should be sat.)
+
+But a negative offset _should not_ cause problems in and of itself, only if this takes the address out of bounds.
+
+(l):
+First Assert a = 200, c = -20 (so the offset adjustment is -20*8=-160, making the "address" of sum out to be 0, which is null).
+Then Assert Block(pt) != Block(sum).
+(Should be unsat.)
+
+(m):
+First Assert a = 200, c = -20 (so the offset adjustment is -20*8=-160, making the "address" of sum out to be 0, which is null).
+Then Assert Offset(sum) - Offset(pt) != -160.
+(Should be unsat.)
+
+(n): An additional check for pointer subtraction:
+First Assert a = 200, c = -20 (so the offset adjustment is -20*8=-160, making the "address" of sum out to be 0, which is null).
+Then Assert sum -p pt != -20.
+(Should be unsat.)
 
 (this benchmark still in progress)
 
