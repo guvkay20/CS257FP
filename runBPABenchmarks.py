@@ -19,6 +19,7 @@ def convertAndRunMarks(marks, converter=convertFileTo):
     times = list()
     ttimes = list()
     tttimes = list()
+    memories = list()
 
     for mark in marks:
         print("Running:",mark)
@@ -32,19 +33,28 @@ def convertAndRunMarks(marks, converter=convertFileTo):
         assigns = {z[0]:z[1] for z in assigns if len(z)==2}
         _time = float(assigns[":time"])
         _ttime = float(assigns[":total-time"])
+        _memory = float(assigns[":memory"])
         times.append(_time)
         ttimes.append(_ttime)
         tttimes.append(toc-tic)
+        memories.append(_memory)
     avg_time = sum(times)/len(times)
     avg_ttime = sum(ttimes)/len(ttimes)
     avg_tttime = sum(tttimes)/len(tttimes)
-    return {"averaged results":(avg_time,avg_ttime,avg_tttime),"raw results":(times,ttimes,tttimes)}
+    avg_mem = sum(memories)/len(memories)
+    return {"averaged results":(avg_time,avg_ttime,avg_tttime,avg_mem),"raw results":(times,ttimes,tttimes,memories)}
 
 
 if __name__ == "__main__":
     BPAmarks = getMarksList()
     BPAPmarks = getMarksList("benchmarks/BPA+/")
     #BPAmarks = [m.replace("BPA+","BPA") for m in BPAPmarks]
+
+    # First run for cache
+    BPAres = convertAndRunMarks(BPAmarks)
+    BPAPres = convertAndRunMarks(BPAPmarks,converter=convertFileToPlus)
+
+    # Second run for computation
     BPAres = convertAndRunMarks(BPAmarks)
     BPAPres = convertAndRunMarks(BPAPmarks,converter=convertFileToPlus)
     res = {"unoptimized results":BPAres, "optimized results":BPAPres}
