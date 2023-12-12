@@ -11,5 +11,4 @@
 (assert (not (<= 0 (Reduce a) 512)))
 (assert (= (Block (Create+ b a)) b))
 (check-sat)
-(get-model)
 (exit)

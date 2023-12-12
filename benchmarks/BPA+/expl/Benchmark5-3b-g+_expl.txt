@@ -25,5 +25,5 @@ We can combine these in different combinations. We expect the following statemen
 
 (d): 4 and 5 must be true. (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
 (e): We can_not_ have ~2 and 4. (This is because 2 is now guaranteed.)
-(f): We cannot have ~2 and 5. (in fact we must have 2 and 5 now)
-(g): We can no longer have ~1 and 5. (in fact, address(Create+ b a) must be Reduce(a))
+(f): We cannot have ~2 and 6. (in fact we must have 2 and 5 now)
+(g): We can no longer have ~1 and 6. (in fact, address(Create+ b a) must be Reduce(a))

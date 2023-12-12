@@ -8,6 +8,6 @@
 (declare-const a Int+)
 (declare-const b Int)
 (assert (= b (Block p)))
-(assert (not (and (= (Block (Create+ b a)) b) (= (+ (Base (Block (Create+ b a))) (Offset (Create b a))) (+ (Base (Block p)) (Offset p))))))
+(assert (not (and (= (Block (Create+ b a)) b) (= (+ (Base (Block (Create+ b a))) (Offset (Create b a))) (Reduce a)))))
 (check-sat)
 (exit)

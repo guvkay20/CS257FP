@@ -96,7 +96,7 @@ We can combine these in different combinations. We expect the following statemen
 (d): 2 implies (4 and 5). (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
 (e): We can have ~2 and 4.
 (f): We can have ~2 and 6.
-(g): We _can_ have ~1 and 5.
+(g): We can have ~1 and 6.
 
 ==============
 
