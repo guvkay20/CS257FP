@@ -11,5 +11,4 @@
 (assert (not (= (Reduce a) (+ (Base b) (Offset p)))))
 (assert (= (+ (Base (Block (Create b a))) (Offset (Create b a))) (+ (Base (Block p)) (Offset p))))
 (check-sat)
-(get-model)
 (exit)

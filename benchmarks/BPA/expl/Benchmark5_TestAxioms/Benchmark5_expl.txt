@@ -85,7 +85,8 @@ Here are a few statements:
 
 (3) (Create b a) == p.
 (4) block(Create b a) == b.
-(5) address(Create b a) == address(p)
+(5) address(Create b a) == a
+(6) address(Create b a) == address(p)
 
 We can combine these in different combinations. We expect the following statements to be true:
 (a): 1 implies 2.
@@ -94,7 +95,7 @@ We can combine these in different combinations. We expect the following statemen
 
 (d): 2 implies (4 and 5). (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
 (e): We can have ~2 and 4.
-(f): We cannot have ~2 and 5.
+(f): We can have ~2 and 6.
 (g): We _can_ have ~1 and 5.
 
 ==============

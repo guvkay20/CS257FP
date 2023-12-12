@@ -15,7 +15,8 @@ Here are a few statements:
 
 (3) (Create+ b a) == p.
 (4) block(Create+ b a) == b.
-(5) address(Create+ b a) == address(p)
+(5) address(Create+ b a) == (Reduce a)
+(6) address(Create+ b a) == address(p)
 
 We can combine these in different combinations. We expect the following statements to be true:
 (a): [DNE]
