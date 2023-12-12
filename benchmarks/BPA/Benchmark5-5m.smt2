@@ -3,7 +3,7 @@
 (set-logic BPA)
 (set-info :source | Kaya Guvendi and Ethan Bogle |)
 (set-info :category "crafted")
-(set-info :status sat)
+(set-info :status unsat)
 (declare-const pt Pointer)
 (declare-const c Int)
 (declare-const sum Pointer)
