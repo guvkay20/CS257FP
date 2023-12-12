@@ -383,7 +383,7 @@ def Adeltplus(term):
     p = term.slps[1]
     i = term.slps[2]
     if (isinstance(p,LevelPart)and(len(p.slps)>0)and(p.slps[0].s=="Create+")):
-        return IMPL(RANGEPLUS(p,i),DELTAPLUS(ADDP(p,i),p))
+        return IMPL(RANGEPLUS(p,i),DELTA(ADDP(p,i),p))
     return Adelt(term)
 
 def Aa(term):

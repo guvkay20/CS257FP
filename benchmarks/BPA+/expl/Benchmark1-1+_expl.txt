@@ -30,19 +30,23 @@ for ( int* iterator = start; iterator != end; iterator++ ) {
 =================
 
 We translate as follows:
-start = (Create 0 a)  # create a new pointer with some address a
-1<=a<=512  # the address is a non-NULL memory location.
 
-end = (Create 1 b)  # create a new pointer with some address b
-1<=b<=512  # the address is a non-NULL memory location.
+Declare pointers start and end.
+Declare Int+ a and b.
 
-b == a + 2*8  # the address b is what you should expect a to be after two iterations.
+start = (Create+ 0 a)
+Reduce(a) != 0  # start is not null
+
+end = (Create+ 1 b)  
+Reduce(b) != 0  # end is not null
+
+Reduce(b) == Reduce(a) + 2*8  # the address b is what you should expect a to be after two iterations.
 
 start +p 2 == end  # after incrementing the pointer start by 2, it should now be asserted equal to end.
 
 Expected result: unsat.
 
-Explanation: Using everything but the last line, we can deduce that (start +p 2) == (Create 0 b) while end == (Create 1 b), and these are not equal.
+Explanation: Using everything but the last line, we can deduce that (start +p 2) == (Create+ 0 b) while end == (Create+ 1 b), and these are not equal.
 
 
 

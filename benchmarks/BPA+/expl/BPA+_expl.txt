@@ -1,0 +1,11 @@
+The benchmarks from this folder are directly copied from the benchmarks for BPA, except that where possible we use Int+ types and (Create+ Int Int+). Any benchmarks not including (Create ) calls are directly copied with no changes, and documentation for them can be found in the BPA folder.
+
+The benchmarks that were changed are as follows:
+-basic3.smt2
+-Benchmark1-1.smt2
+-Benchmark5-3b.smt2
+-Benchmark5-3c.smt2
+-Benchmark5-3d.smt2
+-Benchmark5-3e.smt2
+-Benchmark5-3f.smt2
+-Benchmark5-3g.smt2
