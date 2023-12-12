@@ -1,0 +1,28 @@
+Benchmark 5-3+:
+
+A_p states that a pointer created with the same block and address as p must equal p. A_a states that the address of a created pointer is the address it was created with, provided that the address was valid. A_b states that the block of a created poitner is the block it was created with, provided that the address was valid.
+
+We therefore wish to test these three axioms directly for an instantiated p.
+
+Declare pointer p.
+For convenience, declare Int+ a
+For convenience, declare Int b
+For convenience, assert b = Block(p).
+
+Here are a few statements:
+(1) (Reduce a) == (Base b) + offset(p).
+(2) 0 <= a <= 512.  # Becomes a Tautology
+
+(3) (Create+ b a) == p.
+(4) block(Create+ b a) == b.
+(5) address(Create+ b a) == Reduce(a)
+
+We can combine these in different combinations. We expect the following statements to be true:
+(a): [DNE]
+(b): 1 implies 3.
+(c): 3 -> 1 ((Create+ b a), must have block b and address (Reduce a), and so it is functionally equal to any other pointer with this block and address.)
+
+(d): 4 and 5 must be true. (This doesn't use anything about p. This is just a direct statement of A_a and A_b together.)
+(e): We can_not_ have ~2 and 4. (This is because 2 is now guaranteed.)
+(f): We cannot have ~2 and 5. (in fact we must have 2 and 5 now)
+(g): We can no longer have ~1 and 5. (in fact, address(Create+ b a) must be Reduce(a))
