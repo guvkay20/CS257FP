@@ -13,7 +13,7 @@ Undesireable behavior: the for loop fails to properly stop.
 
 Possible: Yes.
 
-Explanation: Notice that b_fw will always be "tied" to the allocation of the array __start_builtin_fw[], while __end_builtin_fw is the pointer to the beginning of the titular array. The intended behavior is for stopping to occur when the addresses are equal, but the compiler may instead say "these two pointers are related to different memory objects, so they can't possibly be equal" without bothering to check the address.
+Explanation: Notice that b_fw will always be "tied" to the allocation of the array __start_builtin_fw[], while __end_builtin_fw is the pointer to the beginning of the latter array. The intended behavior is for stopping to occur when the addresses are equal, but the compiler may instead say "these two pointers are related to different memory objects, so they can't possibly be equal" without bothering to check the address.
 
 Root cause: comparison of pointers related to different memory objects is an undefined operation.
 
@@ -23,7 +23,7 @@ We first rewrite the program to ignore the actual contents of the array (pretend
 
 =================
 int* start;
-int* end;
+int* end;  // Assume address(end) > address(start)
 …
 for ( int* iterator = start; iterator != end; iterator++ ) {
 …
