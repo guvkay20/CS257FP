@@ -2,6 +2,7 @@ import json
 import numpy as np
 import pdb
 
+# Json -> CSV
 res = json.load(open("results.json"))
 res = (res['unoptimized results'],res['optimized results'])
 res = (res[0]['raw results'],res[1]['raw results'])
@@ -13,6 +14,7 @@ save(res[0],"results/unoptimized.csv")
 save(res[1],"results/optimized.csv")
 save(diffs,"results/differences.csv")
 
+# Merged CSV Create
 with open("results/unoptimized.csv") as a:
     with open("results/optimized.csv") as b:
         with open("results/differences.csv") as c:
@@ -21,4 +23,3 @@ with open("results/unoptimized.csv") as a:
                 for i in range(diffs.shape[0]):
                     f.write(a.readline()[:-1]+", ,"+b.readline()[:-1]+", ,"+c.readline())
 
-pdb.set_trace()
