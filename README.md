@@ -2,7 +2,7 @@
 
 This repository contains the program files used for CS257 Final Project of Kaya Guvendi and Ethan Bogle.
 
-benchmarks/ directory contains the two theories' benchmarks.
+benchmarks/ directory contains the two theories' benchmarks. Do note the expl directory in each benchmark's folder, containing explanations of the benchmarks.
 
 BPA.smt and BPA+.smt define the syntax of their respective theories.
 
