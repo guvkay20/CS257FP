@@ -1,6 +1,6 @@
 (set-info :smt-lib-version 2.6)
 (set-option :produce-assignments true)
-(set-logic BPA)
+(set-logic BPA+)
 (set-info :source | Kaya Guvendi and Ethan Bogle |)
 (set-info :category "crafted")
 (set-info :status unsat)
